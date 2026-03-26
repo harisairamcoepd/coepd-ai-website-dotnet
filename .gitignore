@@ -1,0 +1,14 @@
+bin/
+obj/
+.vs/
+packages/
+App_Data/*.mdf
+App_Data/*.ldf
+*.user
+*.suo
+*.cache
+*.log
+*.tmp
+*.pdb
+*.nupkg
+node_modules/

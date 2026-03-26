@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>COEPD Staff Sign In</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/css/auth.css?v=1" />
+</head>
+<body class="auth-body">
+  <main class="auth-page">
+    <section class="auth-shell" aria-label="Staff login panel">
+      <aside class="auth-panel auth-panel--brand">
+        <span class="auth-brand-mark"><span class="auth-brand-dot" aria-hidden="true"></span> COEPD Secure</span>
+        <h2>Staff Workflow Portal</h2>
+        <p>Track prospects, update lead progress, and keep daily BA admissions operations moving without delays.</p>
+        <ul class="auth-points">
+          <li>Fast lead lookup and filtering</li>
+          <li>Daily/weekly performance insights</li>
+          <li>Protected internal access</li>
+        </ul>
+      </aside>
+
+      <div class="auth-panel auth-panel--form">
+        <span class="auth-role">Staff Access</span>
+        <h1 class="auth-title">Sign In</h1>
+        <p class="auth-subtitle">Use your staff credentials to access the dashboard.</p>
+        <p class="auth-error" role="alert">{{ error or '' }}</p>
+
+        <form class="auth-form" method="post" action="/staff">
+          <label for="email">Email / Username
+            <input id="email" name="email" type="text" required autocomplete="username" placeholder="Enter staff email or username" />
+          </label>
+
+          <label for="password">Password
+            <input id="password" name="password" type="password" required autocomplete="current-password" placeholder="Enter password" />
+          </label>
+
+          <button class="auth-submit" type="submit">Sign In to Staff</button>
+        </form>
+        <p class="auth-footnote">Reach admin if you cannot access your account.</p>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
