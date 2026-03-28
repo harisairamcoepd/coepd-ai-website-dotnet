@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:viewModels="clr-namespace:Coepd.Mobile.ViewModels"
+             x:Class="Coepd.Mobile.Views.DashboardPage"
+             x:DataType="viewModels:DashboardViewModel"
+             Title="Dashboard"
+             BackgroundColor="#F2F7FB">
+    <ScrollView>
+        <VerticalStackLayout Padding="20,24,20,34" Spacing="18">
+            <Border Padding="22" Background="#0F172A" StrokeThickness="0" StrokeShape="RoundRectangle 30">
+                <VerticalStackLayout Spacing="12">
+                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                        <VerticalStackLayout Spacing="4">
+                            <Label Text="COEPD Mobile Dashboard"
+                                   FontSize="28"
+                                   FontAttributes="Bold"
+                                   TextColor="White" />
+                            <Label Text="{Binding RoleLabel}"
+                                   FontSize="13"
+                                   TextColor="#67E8F9" />
+                            <Label Text="{Binding WorkspaceLabel}"
+                                   FontSize="13"
+                                   TextColor="#CBD5E1" />
+                        </VerticalStackLayout>
+                        <Button Grid.Column="1"
+                                Text="Logout"
+                                Clicked="OnLogoutClicked"
+                                BackgroundColor="#172554"
+                                TextColor="White"
+                                CornerRadius="16"
+                                HeightRequest="46" />
+                    </Grid>
+                    <Label Text="{Binding SummaryText}"
+                           FontSize="13"
+                           TextColor="#CBD5E1" />
+                </VerticalStackLayout>
+            </Border>
+
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="14" RowDefinitions="Auto,Auto">
+                <Border Grid.Row="0" Grid.Column="0" Padding="18" Background="#FFFFFF" Stroke="#D7E3F4" StrokeShape="RoundRectangle 24">
+                    <VerticalStackLayout Spacing="8">
+                        <Label Text="Total Leads" FontSize="13" TextColor="#64748B" />
+                        <Label Text="{Binding TotalLeads}" FontSize="30" FontAttributes="Bold" TextColor="#0F172A" />
+                        <Label Text="All active captured enquiries" FontSize="12" TextColor="#94A3B8" />
+                    </VerticalStackLayout>
+                </Border>
+                <Border Grid.Row="0" Grid.Column="1" Padding="18" Background="#FFFFFF" Stroke="#D7E3F4" StrokeShape="RoundRectangle 24">
+                    <VerticalStackLayout Spacing="8">
+                        <Label Text="Today's Leads" FontSize="13" TextColor="#64748B" />
+                        <Label Text="{Binding TodayLeads}" FontSize="30" FontAttributes="Bold" TextColor="#0F172A" />
+                        <Label Text="Fresh activity for the current day" FontSize="12" TextColor="#94A3B8" />
+                    </VerticalStackLayout>
+                </Border>
+                <Border Grid.Row="1" Grid.Column="0" Padding="18" Background="#FFFFFF" Stroke="#D7E3F4" StrokeShape="RoundRectangle 24">
+                    <VerticalStackLayout Spacing="8">
+                        <Label Text="Chatbot Leads" FontSize="13" TextColor="#64748B" />
+                        <Label Text="{Binding ChatbotLeads}" FontSize="30" FontAttributes="Bold" TextColor="#0F172A" />
+                        <Label Text="Conversations converted to leads" FontSize="12" TextColor="#94A3B8" />
+                    </VerticalStackLayout>
+                </Border>
+                <Border Grid.Row="1" Grid.Column="1" Padding="18" Background="#FFFFFF" Stroke="#D7E3F4" StrokeShape="RoundRectangle 24">
+                    <VerticalStackLayout Spacing="8">
+                        <Label Text="Website Leads" FontSize="13" TextColor="#64748B" />
+                        <Label Text="{Binding WebsiteLeads}" FontSize="30" FontAttributes="Bold" TextColor="#0F172A" />
+                        <Label Text="Form submissions from the website" FontSize="12" TextColor="#94A3B8" />
+                    </VerticalStackLayout>
+                </Border>
+            </Grid>
+
+            <Border Padding="22" Background="#FFFFFF" Stroke="#D7E3F4" StrokeShape="RoundRectangle 28">
+                <VerticalStackLayout Spacing="14">
+                    <Label Text="Quick Actions"
+                           FontSize="20"
+                           FontAttributes="Bold"
+                           TextColor="#0F172A" />
+                    <Button Text="Open Lead Explorer"
+                            Clicked="OnOpenLeadsClicked"
+                            BackgroundColor="#22C55E"
+                            TextColor="White"
+                            CornerRadius="18"
+                            HeightRequest="54" />
+                    <Button Text="Refresh Dashboard"
+                            Clicked="OnRefreshClicked"
+                            BackgroundColor="#2563EB"
+                            TextColor="White"
+                            CornerRadius="18"
+                            HeightRequest="54" />
+                    <Label Text="{Binding StatusMessage}"
+                           FontSize="13"
+                           TextColor="#64748B" />
+                    <ActivityIndicator IsRunning="{Binding IsBusy}"
+                                       IsVisible="{Binding IsBusy}"
+                                       Color="#0F766E" />
+                </VerticalStackLayout>
+            </Border>
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

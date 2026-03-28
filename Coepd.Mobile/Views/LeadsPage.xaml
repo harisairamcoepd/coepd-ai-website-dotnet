@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:viewModels="clr-namespace:Coepd.Mobile.ViewModels"
+             xmlns:models="clr-namespace:Coepd.Mobile.Models"
+             x:Class="Coepd.Mobile.Views.LeadsPage"
+             x:Name="LeadsPageRoot"
+             x:DataType="viewModels:LeadsViewModel"
+             Title="Leads"
+             BackgroundColor="#F2F7FB">
+    <Grid RowDefinitions="Auto,*">
+        <VerticalStackLayout Padding="20,20,20,12" Spacing="14">
+            <Border Padding="18" Background="#FFFFFF" Stroke="#D7E3F4" StrokeShape="RoundRectangle 26">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="Lead Explorer"
+                           FontSize="28"
+                           FontAttributes="Bold"
+                           TextColor="#0F172A" />
+                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                        <Border Padding="10,6"
+                                HorizontalOptions="Start"
+                                Background="#E2E8F0"
+                                StrokeThickness="0"
+                                StrokeShape="RoundRectangle 16">
+                            <Label Text="{Binding RoleLabel}"
+                                   FontSize="12"
+                                   FontAttributes="Bold"
+                                   TextColor="#0F172A" />
+                        </Border>
+                        <Label Grid.Column="1"
+                               Text="{Binding LeadCount, StringFormat='Live records: {0}'}"
+                               VerticalTextAlignment="Center"
+                               HorizontalTextAlignment="End"
+                               FontSize="12"
+                               TextColor="#64748B" />
+                    </Grid>
+                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                        <Entry Grid.Column="0"
+                               Placeholder="Search by name, phone, email, location"
+                               Text="{Binding SearchText}"
+                               ClearButtonVisibility="WhileEditing"
+                               BackgroundColor="#F8FAFC" />
+                        <Button Grid.Column="1"
+                                Text="Search"
+                                Clicked="OnSearchClicked"
+                                BackgroundColor="#0F766E"
+                                TextColor="White"
+                                CornerRadius="16" />
+                    </Grid>
+                    <Label Text="{Binding StatusMessage}"
+                           FontSize="13"
+                           TextColor="#64748B" />
+                </VerticalStackLayout>
+            </Border>
+        </VerticalStackLayout>
+
+        <RefreshView Grid.Row="1"
+                     IsRefreshing="{Binding IsRefreshing}"
+                     Command="{x:Null}"
+                     Refreshing="OnRefreshing">
+            <CollectionView ItemsSource="{Binding Leads}"
+                            Margin="20,0,20,20"
+                            SelectionMode="None">
+                <CollectionView.EmptyView>
+                    <VerticalStackLayout Padding="30" Spacing="8">
+                        <Label Text="No leads found"
+                               HorizontalTextAlignment="Center"
+                               FontSize="20"
+                               FontAttributes="Bold"
+                               TextColor="#0F172A" />
+                        <Label Text="Pull to refresh or search again."
+                               HorizontalTextAlignment="Center"
+                               TextColor="#64748B" />
+                    </VerticalStackLayout>
+                </CollectionView.EmptyView>
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="models:Lead">
+                        <Border Margin="0,0,0,12"
+                                Padding="18"
+                                Background="#FFFFFF"
+                                Stroke="#D7E3F4"
+                                StrokeShape="RoundRectangle 24">
+                            <VerticalStackLayout Spacing="10">
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                                        <Border Padding="0"
+                                                WidthRequest="46"
+                                                HeightRequest="46"
+                                                Background="#E0F2FE"
+                                                StrokeThickness="0"
+                                                StrokeShape="RoundRectangle 23">
+                                            <Label Text="{Binding Initials}"
+                                                   FontSize="14"
+                                                   FontAttributes="Bold"
+                                                   TextColor="#0F172A"
+                                                   HorizontalOptions="Center"
+                                                   VerticalOptions="Center"
+                                                   HorizontalTextAlignment="Center"
+                                                   VerticalTextAlignment="Center" />
+                                        </Border>
+                                        <VerticalStackLayout Grid.Column="1" Spacing="2">
+                                            <Label Text="{Binding Name}" FontSize="18" FontAttributes="Bold" TextColor="#0F172A" />
+                                            <Label Text="{Binding SourceLabel}" FontSize="12" TextColor="{Binding SourceAccent}" />
+                                        </VerticalStackLayout>
+                                    </Grid>
+                                    <Button Grid.Column="1"
+                                            Text="Delete"
+                                            Clicked="OnDeleteClicked"
+                                            CommandParameter="{Binding .}"
+                                            IsVisible="{Binding CanDelete}"
+                                            BackgroundColor="#EF4444"
+                                            TextColor="White"
+                                            CornerRadius="14"
+                                            HeightRequest="40" />
+                                </Grid>
+                                <Label Text="{Binding Phone, StringFormat='Phone: {0}'}" TextColor="#0F172A" />
+                                <Label Text="{Binding Email, StringFormat='Email: {0}'}" TextColor="#334155" />
+                                <Label Text="{Binding Location, StringFormat='Location: {0}'}" TextColor="#475569" />
+                                <Label Text="{Binding DateTimeDisplay}" FontSize="12" TextColor="#64748B" />
+                            </VerticalStackLayout>
+                        </Border>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </RefreshView>
+    </Grid>
+</ContentPage>

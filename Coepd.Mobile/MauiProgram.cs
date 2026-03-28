@@ -1,4 +1,6 @@
 using Coepd.Mobile.Services;
+using Coepd.Mobile.ViewModels;
+using Coepd.Mobile.Views;
 using Microsoft.Extensions.Logging;
 
 namespace Coepd.Mobile;
@@ -20,8 +22,20 @@ public static class MauiProgram
 		builder.Logging.AddDebug();
 #endif
 
-		builder.Services.AddSingleton<LeadApiClient>();
-		builder.Services.AddSingleton<MainPage>();
+		builder.Services.AddSingleton<ApiSession>();
+		builder.Services.AddSingleton<AuthService>();
+		builder.Services.AddSingleton<LeadApiService>();
+
+		builder.Services.AddTransient<RoleSelectionViewModel>();
+		builder.Services.AddTransient<LoginViewModel>();
+		builder.Services.AddTransient<DashboardViewModel>();
+		builder.Services.AddTransient<LeadsViewModel>();
+
+		builder.Services.AddTransient<SplashPage>();
+		builder.Services.AddTransient<RoleSelectionPage>();
+		builder.Services.AddTransient<LoginPage>();
+		builder.Services.AddTransient<DashboardPage>();
+		builder.Services.AddTransient<LeadsPage>();
 
 		return builder.Build();
 	}

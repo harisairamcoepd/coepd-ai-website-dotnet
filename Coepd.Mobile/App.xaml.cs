@@ -1,17 +1,19 @@
+using Coepd.Mobile.Views;
+
 namespace Coepd.Mobile;
 
 public partial class App : Application
 {
-	private readonly MainPage _mainPage;
+    private readonly SplashPage _splashPage;
 
-	public App(MainPage mainPage)
-	{
-		InitializeComponent();
-		_mainPage = mainPage;
-	}
+    public App(SplashPage splashPage)
+    {
+        InitializeComponent();
+        _splashPage = splashPage;
+    }
 
-	protected override Window CreateWindow(IActivationState? activationState)
-	{
-		return new Window(new NavigationPage(_mainPage));
-	}
+    protected override Window CreateWindow(IActivationState? activationState)
+    {
+        return new Window(new NavigationPage(_splashPage));
+    }
 }

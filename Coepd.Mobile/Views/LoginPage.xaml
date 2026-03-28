@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:viewModels="clr-namespace:Coepd.Mobile.ViewModels"
+             x:Class="Coepd.Mobile.Views.LoginPage"
+             x:DataType="viewModels:LoginViewModel"
+             Title="Login"
+             BackgroundColor="#F2F7FB">
+    <ScrollView>
+        <VerticalStackLayout Padding="24,28,24,36" Spacing="18">
+            <Border Padding="24" Background="#0F172A" StrokeThickness="0" StrokeShape="RoundRectangle 30">
+                <VerticalStackLayout Spacing="10">
+                    <Border Padding="10,6"
+                            HorizontalOptions="Start"
+                            Background="#172554"
+                            StrokeThickness="0"
+                            StrokeShape="RoundRectangle 16">
+                        <Label Text="{Binding Role}"
+                               FontSize="12"
+                               FontAttributes="Bold"
+                               TextColor="#93C5FD"
+                               TextTransform="Uppercase" />
+                    </Border>
+                    <Label Text="Secure sign in"
+                           FontSize="28"
+                           FontAttributes="Bold"
+                           TextColor="White" />
+                    <Label Text="Connect the mobile workspace to the live COEPD website and continue with your role-based access."
+                           FontSize="14"
+                           TextColor="#CBD5E1" />
+                </VerticalStackLayout>
+            </Border>
+
+            <Border Padding="22" Background="#FFFFFF" Stroke="#D7E3F4" StrokeShape="RoundRectangle 28">
+                <VerticalStackLayout Spacing="16">
+                    <Label Text="Live server"
+                           FontSize="13"
+                           TextColor="#64748B" />
+                    <Entry Placeholder="Website URL"
+                           Text="{Binding BaseUrl}"
+                           Keyboard="Url"
+                           ClearButtonVisibility="WhileEditing"
+                           BackgroundColor="#F8FAFC" />
+                    <Label Text="Account"
+                           FontSize="13"
+                           TextColor="#64748B" />
+                    <Entry Placeholder="Email"
+                           Text="{Binding Email}"
+                           Keyboard="Email"
+                           ClearButtonVisibility="WhileEditing"
+                           BackgroundColor="#F8FAFC" />
+                    <Label Text="Password"
+                           FontSize="13"
+                           TextColor="#64748B" />
+                    <Entry Placeholder="Password"
+                           Text="{Binding Password}"
+                           IsPassword="True"
+                           BackgroundColor="#F8FAFC" />
+                    <Button Text="Login to Workspace"
+                            Clicked="OnLoginClicked"
+                            BackgroundColor="#22C55E"
+                            TextColor="White"
+                            CornerRadius="18"
+                            HeightRequest="56" />
+                    <ActivityIndicator IsRunning="{Binding IsBusy}"
+                                       IsVisible="{Binding IsBusy}"
+                                       Color="#0F766E" />
+                    <Label Text="{Binding StatusMessage}"
+                           FontSize="13"
+                           TextColor="#64748B" />
+                </VerticalStackLayout>
+            </Border>
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

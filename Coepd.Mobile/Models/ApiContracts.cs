@@ -2,7 +2,7 @@ using System.Text.Json.Serialization;
 
 namespace Coepd.Mobile.Models;
 
-public class LoginRequest
+public sealed class LoginRequest
 {
     [JsonPropertyName("email")]
     public string Email { get; set; } = string.Empty;
@@ -11,7 +11,7 @@ public class LoginRequest
     public string Password { get; set; } = string.Empty;
 }
 
-public class LoginResponse
+public sealed class LoginResponse
 {
     [JsonPropertyName("success")]
     public bool Success { get; set; }
@@ -23,13 +23,13 @@ public class LoginResponse
     public string Role { get; set; } = string.Empty;
 }
 
-public class LeadsEnvelope
+public sealed class LeadsEnvelope
 {
     [JsonPropertyName("leads")]
     public List<LeadDto> Leads { get; set; } = new();
 }
 
-public class LeadDto
+public sealed class LeadDto
 {
     [JsonPropertyName("id")]
     public int Id { get; set; }
@@ -50,8 +50,23 @@ public class LeadDto
     public string Source { get; set; } = string.Empty;
 
     [JsonPropertyName("created_at")]
-    public DateTime CreatedAt { get; set; }
+    public string CreatedAtRaw { get; set; } = string.Empty;
 
     [JsonPropertyName("datetime_display")]
     public string DateTimeDisplay { get; set; } = string.Empty;
+}
+
+public sealed class StatsDto
+{
+    [JsonPropertyName("total_leads")]
+    public int TotalLeads { get; set; }
+
+    [JsonPropertyName("today_leads")]
+    public int TodayLeads { get; set; }
+
+    [JsonPropertyName("chatbot_leads")]
+    public int ChatbotLeads { get; set; }
+
+    [JsonPropertyName("website_leads")]
+    public int WebsiteLeads { get; set; }
 }

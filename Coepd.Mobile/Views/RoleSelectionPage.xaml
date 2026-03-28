@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:viewModels="clr-namespace:Coepd.Mobile.ViewModels"
+             x:Class="Coepd.Mobile.Views.RoleSelectionPage"
+             x:DataType="viewModels:RoleSelectionViewModel"
+             Title="Choose Access"
+             BackgroundColor="#F2F7FB">
+    <ScrollView>
+        <VerticalStackLayout Padding="24,28,24,36" Spacing="22">
+            <Border Padding="24"
+                    Background="#0F172A"
+                    StrokeThickness="0"
+                    StrokeShape="RoundRectangle 32">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="COEPD Leads"
+                           FontSize="30"
+                           FontAttributes="Bold"
+                           TextColor="White" />
+                    <Label Text="Choose the workspace that matches your team access."
+                           FontSize="15"
+                           TextColor="#CBD5E1" />
+                </VerticalStackLayout>
+            </Border>
+
+            <Border Padding="22" Background="#FFFFFF" Stroke="#CFE7E7" StrokeShape="RoundRectangle 28">
+                <VerticalStackLayout Spacing="14">
+                    <Label Text="ADMIN"
+                           FontSize="12"
+                           FontAttributes="Bold"
+                           TextColor="#0F766E" />
+                    <Label Text="Operations Control"
+                           FontSize="24"
+                           FontAttributes="Bold"
+                           TextColor="#0F172A" />
+                    <Label Text="View analytics, manage staff access, review all leads, and remove invalid records."
+                           FontSize="14"
+                           TextColor="#64748B" />
+                    <Button Text="Continue as Admin"
+                            Clicked="OnAdminClicked"
+                            BackgroundColor="#0F766E"
+                            TextColor="White"
+                            CornerRadius="18"
+                            HeightRequest="56" />
+                </VerticalStackLayout>
+            </Border>
+
+            <Border Padding="22" Background="#FFFFFF" Stroke="#D8E3F8" StrokeShape="RoundRectangle 28">
+                <VerticalStackLayout Spacing="14">
+                    <Label Text="STAFF"
+                           FontSize="12"
+                           FontAttributes="Bold"
+                           TextColor="#2563EB" />
+                    <Label Text="Lead Review Desk"
+                           FontSize="24"
+                           FontAttributes="Bold"
+                           TextColor="#0F172A" />
+                    <Label Text="Track fresh leads, refresh the live list, and stay focused with read-only access."
+                           FontSize="14"
+                           TextColor="#64748B" />
+                    <Button Text="Continue as Staff"
+                            Clicked="OnStaffClicked"
+                            BackgroundColor="#2563EB"
+                            TextColor="White"
+                            CornerRadius="18"
+                            HeightRequest="56" />
+                </VerticalStackLayout>
+            </Border>
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>
