@@ -93,21 +93,24 @@ namespace Coepd.Web.Controllers
                     (x.Location ?? "").ToLower().Contains(q));
             }
 
-                var leads = query
-                .OrderByDescending(x => x.CreatedAt)
-                .Take(2000)
-                .Select(x => new
-                {
-                    id = x.Id,
-                    name = x.Name,
-                    phone = x.Phone,
-                    email = x.Email,
-                    location = x.Location ?? "",
-                    source = (x.Source ?? "webpage").ToLower() == "website_form" ? "webpage" : (x.Source ?? "webpage"),
-                    created_at = x.CreatedAt,
-                    datetime_display = TimeZoneHelper.ToDisplayText(x.CreatedAt)
-                })
-                .ToList();
+                var leadRows = query
+                    .OrderByDescending(x => x.CreatedAt)
+                    .Take(2000)
+                    .ToList();
+
+                var leads = leadRows
+                    .Select(x => new
+                    {
+                        id = x.Id,
+                        name = x.Name,
+                        phone = x.Phone,
+                        email = x.Email,
+                        location = x.Location ?? "",
+                        source = (x.Source ?? "webpage").ToLower() == "website_form" ? "webpage" : (x.Source ?? "webpage"),
+                        created_at = x.CreatedAt,
+                        datetime_display = TimeZoneHelper.ToDisplayText(x.CreatedAt)
+                    })
+                    .ToList();
 
                 return Json(new { leads }, JsonRequestBehavior.AllowGet);
             }
@@ -484,18 +487,21 @@ namespace Coepd.Web.Controllers
 
             try
             {
-                var staff = _db.Staff
-                .OrderByDescending(x => x.CreatedAt)
-                .Select(x => new
-                {
-                    id = x.Id,
-                    name = x.Name,
-                    email = x.Email,
-                    role = x.Role,
-                    status = x.Status,
-                    created_at = TimeZoneHelper.ToDisplayText(x.CreatedAt)
-                })
-                .ToList();
+                var staffRows = _db.Staff
+                    .OrderByDescending(x => x.CreatedAt)
+                    .ToList();
+
+                var staff = staffRows
+                    .Select(x => new
+                    {
+                        id = x.Id,
+                        name = x.Name,
+                        email = x.Email,
+                        role = x.Role,
+                        status = x.Status,
+                        created_at = TimeZoneHelper.ToDisplayText(x.CreatedAt)
+                    })
+                    .ToList();
                 return Json(new { staff }, JsonRequestBehavior.AllowGet);
             }
             catch

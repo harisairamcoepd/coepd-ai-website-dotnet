@@ -30,6 +30,12 @@ function asArray(value) {
   return Array.isArray(value) ? value : [];
 }
 
+function getListFromPayload(payload, key) {
+  if (Array.isArray(payload)) return payload;
+  if (payload && Array.isArray(payload[key])) return payload[key];
+  return [];
+}
+
 function escapeHtml(value) {
   return String(value ?? "")
     .replace(/&/g, "&amp;")
@@ -330,7 +336,7 @@ async function loadLeads() {
   const query = queryParts.length ? `?${queryParts.join("&")}` : "";
 
   const payload = await fetchJson(`/api/admin/leads${query}`, "Unable to refresh leads");
-  allLeads = asArray(payload && payload.leads);
+  allLeads = getListFromPayload(payload, "leads");
   currentPage = 1;
   updateSectionTitle();
   renderLeadsTable();
@@ -341,7 +347,7 @@ async function loadUsers() {
   if (!tbody) return;
 
   const payload = await fetchJson("/api/admin/staff", "Unable to fetch staff users");
-  allUsers = asArray(payload && payload.staff);
+  allUsers = getListFromPayload(payload, "staff");
   renderUsersTable();
 }
 
