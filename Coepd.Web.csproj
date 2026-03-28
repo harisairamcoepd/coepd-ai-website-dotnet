@@ -92,6 +92,7 @@
     <Compile Include="Infrastructure\\RuntimeStore.cs" />
     <Compile Include="Infrastructure\\StorageMode.cs" />
     <Compile Include="Infrastructure\\TimeZoneHelper.cs" />
+    <Compile Include="Infrastructure\\DiagnosticLogger.cs" />
     <Compile Include="Infrastructure\\DbBootstrapper.cs" />
     <Compile Include="Models\\CoepdDbContext.cs" />
     <Compile Include="Models\\Lead.cs" />

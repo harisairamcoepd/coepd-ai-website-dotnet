@@ -45,11 +45,13 @@ namespace Coepd.Web.Controllers
                         source = x.Source ?? "webpage",
                         created_at = x.CreatedAt
                     }).ToList();
+                DiagnosticLogger.Info("LeadApi.Index", "Runtime store returned " + runtimeLeads.Count.ToString(CultureInfo.InvariantCulture) + " leads.");
                 return Json(runtimeLeads, JsonRequestBehavior.AllowGet);
             }
 
             try
             {
+                DiagnosticLogger.Info("LeadApi.Index", "Fetching leads from SQL database.");
                 var leads = _db.Leads
                     .Where(x => x.Source != "chatbot_draft")
                     .OrderByDescending(x => x.CreatedAt)
@@ -65,9 +67,10 @@ namespace Coepd.Web.Controllers
                         source = x.Source ?? "webpage",
                         created_at = x.CreatedAt
                     }).ToList();
+                DiagnosticLogger.Info("LeadApi.Index", "SQL returned " + leads.Count.ToString(CultureInfo.InvariantCulture) + " leads.");
                 return Json(leads, JsonRequestBehavior.AllowGet);
             }
-            catch
+            catch (Exception ex)
             {
                 var leads = RuntimeStore.GetLeads()
                     .Where(x => !string.Equals(x.Source, "chatbot_draft", StringComparison.OrdinalIgnoreCase))
@@ -84,6 +87,7 @@ namespace Coepd.Web.Controllers
                         source = x.Source ?? "webpage",
                         created_at = x.CreatedAt
                     }).ToList();
+                DiagnosticLogger.Error("LeadApi.Index", "SQL fetch failed. Falling back to runtime store with " + leads.Count.ToString(CultureInfo.InvariantCulture) + " leads.", ex);
                 return Json(leads, JsonRequestBehavior.AllowGet);
             }
         }
@@ -128,6 +132,7 @@ namespace Coepd.Web.Controllers
             {
                 _db.Leads.Add(lead);
                 _db.SaveChanges();
+                DiagnosticLogger.Info("LeadApi.Create", "Lead inserted into SQL. Id=" + lead.Id.ToString(CultureInfo.InvariantCulture) + ", source=" + (lead.Source ?? string.Empty));
                 return Json(new
                 {
                     ok = true,
@@ -137,9 +142,10 @@ namespace Coepd.Web.Controllers
                     created_at = lead.CreatedAt
                 });
             }
-            catch
+            catch (Exception ex)
             {
                 var fallbackId = RuntimeStore.AddLead(lead);
+                DiagnosticLogger.Error("LeadApi.Create", "SQL insert failed. Falling back to runtime store. RuntimeId=" + fallbackId.ToString(CultureInfo.InvariantCulture), ex);
                 return Json(new
                 {
                     ok = true,
@@ -351,6 +357,7 @@ namespace Coepd.Web.Controllers
                         existing.Source = lead.Source;
                         if (existing.CreatedAt == default(DateTime)) existing.CreatedAt = lead.CreatedAt;
                         _db.SaveChanges();
+                        DiagnosticLogger.Info("LeadApi.ChatSave", "Updated SQL chat lead. Id=" + existing.Id.ToString(CultureInfo.InvariantCulture) + ", source=" + (existing.Source ?? string.Empty));
                         session.CreatedAt = existing.CreatedAt;
                         return;
                     }
@@ -358,18 +365,21 @@ namespace Coepd.Web.Controllers
 
                 _db.Leads.Add(lead);
                 _db.SaveChanges();
+                DiagnosticLogger.Info("LeadApi.ChatSave", "Inserted SQL chat lead. Id=" + lead.Id.ToString(CultureInfo.InvariantCulture) + ", source=" + (lead.Source ?? string.Empty));
                 session.LeadId = lead.Id;
                 session.CreatedAt = lead.CreatedAt;
             }
-            catch
+            catch (Exception ex)
             {
                 if (lead.Id > 0 && RuntimeStore.UpdateLead(lead))
                 {
+                    DiagnosticLogger.Error("LeadApi.ChatSave", "SQL chat save failed. Updated runtime lead instead. Id=" + lead.Id.ToString(CultureInfo.InvariantCulture), ex);
                     session.CreatedAt = lead.CreatedAt;
                     return;
                 }
 
                 session.LeadId = RuntimeStore.AddLead(lead);
+                DiagnosticLogger.Error("LeadApi.ChatSave", "SQL chat save failed. Inserted runtime lead instead. RuntimeId=" + session.LeadId.ToString(CultureInfo.InvariantCulture), ex);
                 session.CreatedAt = lead.CreatedAt;
             }
         }

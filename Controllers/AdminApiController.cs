@@ -62,11 +62,13 @@ namespace Coepd.Web.Controllers
                     })
                     .ToList();
 
+                DiagnosticLogger.Info("AdminApi.Leads", "Runtime store returned " + runtimeLeads.Count.ToString(CultureInfo.InvariantCulture) + " leads.");
                 return Json(new { leads = runtimeLeads }, JsonRequestBehavior.AllowGet);
             }
 
             try
             {
+                DiagnosticLogger.Info("AdminApi.Leads", "Fetching admin leads from SQL.");
                 var query = _db.Leads.Where(x => x.Source != "chatbot_draft").AsQueryable();
 
             if (!string.IsNullOrWhiteSpace(date) && DateTime.TryParse(date, out var d))
@@ -112,9 +114,10 @@ namespace Coepd.Web.Controllers
                     })
                     .ToList();
 
+                DiagnosticLogger.Info("AdminApi.Leads", "SQL returned " + leads.Count.ToString(CultureInfo.InvariantCulture) + " leads.");
                 return Json(new { leads }, JsonRequestBehavior.AllowGet);
             }
-            catch
+            catch (Exception ex)
             {
                 var list = RuntimeStore.GetLeads().AsQueryable();
                 list = list.Where(x => !string.Equals(x.Source, "chatbot_draft", StringComparison.OrdinalIgnoreCase));
@@ -159,6 +162,7 @@ namespace Coepd.Web.Controllers
                     })
                     .ToList();
 
+                DiagnosticLogger.Error("AdminApi.Leads", "SQL fetch failed. Falling back to runtime store with " + leads.Count.ToString(CultureInfo.InvariantCulture) + " leads.", ex);
                 return Json(new { leads }, JsonRequestBehavior.AllowGet);
             }
         }
@@ -482,11 +486,13 @@ namespace Coepd.Web.Controllers
                         created_at = TimeZoneHelper.ToDisplayText(x.CreatedAt)
                     })
                     .ToList();
+                DiagnosticLogger.Info("AdminApi.Staff", "Runtime store returned " + runtimeStaff.Count.ToString(CultureInfo.InvariantCulture) + " staff records.");
                 return Json(new { staff = runtimeStaff }, JsonRequestBehavior.AllowGet);
             }
 
             try
             {
+                DiagnosticLogger.Info("AdminApi.Staff", "Fetching staff records from SQL.");
                 var staffRows = _db.Staff
                     .OrderByDescending(x => x.CreatedAt)
                     .ToList();
@@ -502,9 +508,10 @@ namespace Coepd.Web.Controllers
                         created_at = TimeZoneHelper.ToDisplayText(x.CreatedAt)
                     })
                     .ToList();
+                DiagnosticLogger.Info("AdminApi.Staff", "SQL returned " + staff.Count.ToString(CultureInfo.InvariantCulture) + " staff records.");
                 return Json(new { staff }, JsonRequestBehavior.AllowGet);
             }
-            catch
+            catch (Exception ex)
             {
                 var staff = RuntimeStore.GetStaff()
                     .OrderByDescending(x => x.CreatedAt)
@@ -518,6 +525,7 @@ namespace Coepd.Web.Controllers
                         created_at = TimeZoneHelper.ToDisplayText(x.CreatedAt)
                     })
                     .ToList();
+                DiagnosticLogger.Error("AdminApi.Staff", "SQL fetch failed. Falling back to runtime store with " + staff.Count.ToString(CultureInfo.InvariantCulture) + " staff records.", ex);
                 return Json(new { staff }, JsonRequestBehavior.AllowGet);
             }
         }

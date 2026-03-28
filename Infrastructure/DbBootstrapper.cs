@@ -8,13 +8,18 @@ namespace Coepd.Web.Infrastructure
     {
         public static void EnsureInitialized()
         {
-            if (StorageMode.UseRuntimeStore()) return;
+            if (StorageMode.UseRuntimeStore())
+            {
+                DiagnosticLogger.Info("DbBootstrapper", "Runtime store mode enabled. SQL bootstrap skipped.");
+                return;
+            }
 
             try
             {
                 using (var db = new CoepdDbContext())
                 {
                     db.Database.Connection.Open();
+                    DiagnosticLogger.Info("DbBootstrapper", "SQL connection opened successfully.");
                     db.Database.ExecuteSqlCommand(@"
 IF OBJECT_ID('dbo.leads', 'U') IS NULL
 BEGIN
@@ -71,11 +76,12 @@ IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_leads_email' AND objec
 
 IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_leads_phone' AND object_id = OBJECT_ID('dbo.leads'))
     CREATE INDEX IX_leads_phone ON dbo.leads(phone);");
+                    DiagnosticLogger.Info("DbBootstrapper", "Database bootstrap completed successfully.");
                 }
             }
-            catch
+            catch (Exception ex)
             {
-                // If database bootstrap fails, the app still falls back to runtime storage.
+                DiagnosticLogger.Error("DbBootstrapper", "Database bootstrap failed.", ex);
             }
         }
     }
