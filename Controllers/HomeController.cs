@@ -289,7 +289,7 @@ namespace Coepd.Web.Controllers
                 "<td>" + HttpUtility.HtmlEncode(lead.Email) + "</td>" +
                 "<td>" + HttpUtility.HtmlEncode(string.IsNullOrWhiteSpace(lead.Location) ? "-" : lead.Location) + "</td>" +
                 "<td><span class=\"badge " + (NormalizeSource(lead.Source) == "chatbot" ? "badge-chatbot\">chatbot" : "badge-webpage\">webpage") + "</span></td>" +
-                "<td style=\"white-space:nowrap\">" + HttpUtility.HtmlEncode(lead.CreatedAt.ToString("dd MMM yyyy hh:mm tt", CultureInfo.InvariantCulture)) + "</td>" +
+                "<td style=\"white-space:nowrap\">" + HttpUtility.HtmlEncode(TimeZoneHelper.ToDisplayText(lead.CreatedAt)) + "</td>" +
                 "</tr>"
             ));
         }
@@ -305,7 +305,7 @@ namespace Coepd.Web.Controllers
                 "<td>" + HttpUtility.HtmlEncode(lead.Email) + "</td>" +
                 "<td>" + HttpUtility.HtmlEncode(string.IsNullOrWhiteSpace(lead.Location) ? "-" : lead.Location) + "</td>" +
                 "<td>" + HttpUtility.HtmlEncode(NormalizeSource(lead.Source)) + "</td>" +
-                "<td style=\"white-space:nowrap\">" + HttpUtility.HtmlEncode(lead.CreatedAt.ToString("dd MMM yyyy hh:mm tt", CultureInfo.InvariantCulture)) + "</td>" +
+                "<td style=\"white-space:nowrap\">" + HttpUtility.HtmlEncode(TimeZoneHelper.ToDisplayText(lead.CreatedAt)) + "</td>" +
                 "<td>-</td>" +
                 "</tr>"
             ));

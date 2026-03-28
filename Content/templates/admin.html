@@ -8,7 +8,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/static/css/dashboard.css?v=20260317-5" />
 </head>
-<body>
+<body data-admin-role="{{ current_user.role }}">
   <div class="wrap">
     <div class="head">
       <div class="head-left">
@@ -23,7 +23,7 @@
         {% if current_user.role == 'admin' %}
         <a href="/api/admin/export">Export CSV</a>
         {% endif %}
-        <a href="/logout">Logout</a>
+        <a href="/logout" id="logout-btn">Logout</a>
       </div>
     </div>
 
@@ -148,23 +148,7 @@
               <th>Actions</th>
             </tr>
           </thead>
-          <tbody id="leads-body">
-          {% for l in leads %}
-            <tr id="row-{{ l.id }}">
-              <td>{{ l.id }}</td>
-              <td style="font-weight:500">{{ l.name }}</td>
-              <td>{{ l.phone }}</td>
-              <td>{{ l.email }}</td>
-              <td>{{ l.location or '-' }}</td>
-              <td>{{ l.source }}</td>
-              <td style="white-space:nowrap">{{ l.datetime_display or l.created_at }}</td>
-              <td>-</td>
-            </tr>
-          {% endfor %}
-          {% if not leads %}
-            <tr><td colspan="8" style="text-align:center;padding:24px;color:var(--a-muted)">No leads found.</td></tr>
-          {% endif %}
-          </tbody>
+          <tbody id="leads-body"></tbody>
         </table>
       </div>
 

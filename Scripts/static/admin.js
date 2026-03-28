@@ -1,5 +1,6 @@
-﻿const context = window.__ADMIN_CONTEXT__ || {};
-const currentRole = String(context.role || "staff").toLowerCase();
+const context = window.__ADMIN_CONTEXT__ || {};
+const bodyRole = document.body ? document.body.getAttribute("data-admin-role") : "";
+const currentRole = String(context.role || bodyRole || "staff").toLowerCase();
 const csrfToken = String(context.csrfToken || "");
 
 let leadChart = null;
@@ -54,13 +55,6 @@ function roleBadge(role) {
 function activeBadge(isActive) {
   const active = Boolean(isActive);
   return `<span class="active-badge ${active ? "active" : "inactive"}">${active ? "active" : "inactive"}</span>`;
-}
-
-function normalizeUserActive(user) {
-  const status = String(user?.status || "").trim().toLowerCase();
-  if (status === "active") return true;
-  if (status === "inactive") return false;
-  return Boolean(user?.is_active);
 }
 
 function currentFilterDate() {
@@ -127,38 +121,33 @@ async function fetchJson(url, fallbackErrorMessage, options = {}) {
     requestOptions.headers["X-CSRF-Token"] = csrfToken;
   }
 
-  try {
-    const response = await fetch(fullUrl, requestOptions);
-    if (response.status === 401) {
-      window.location.href = "/admin";
-      throw new Error("UNAUTHORIZED");
-    }
-
-    const contentType = response.headers.get("content-type") || "";
-    const isJson = contentType.includes("application/json");
-    const payload = isJson ? await response.json() : null;
-
-    if (!response.ok) {
-      const apiMessage = payload?.error || payload?.detail || fallbackErrorMessage || "Request failed";
-      throw new Error(apiMessage);
-    }
-
-    if (!isJson) {
-      return {};
-    }
-
-    const data = payload || {};
-    if (data && data.error) {
-      throw new Error(data.error);
-    }
-    if (data && data.success === false) {
-      throw new Error(data.error || fallbackErrorMessage || "Request failed");
-    }
-    return data;
-  } catch (error) {
-    console.error(fallbackErrorMessage, error);
-    throw error;
+  const response = await fetch(fullUrl, requestOptions);
+  if (response.status === 401) {
+    window.location.href = "/admin";
+    throw new Error("UNAUTHORIZED");
   }
+
+  const contentType = response.headers.get("content-type") || "";
+  const isJson = contentType.includes("application/json");
+  const payload = isJson ? await response.json() : null;
+
+  if (!response.ok) {
+    const apiMessage = payload?.error || payload?.detail || fallbackErrorMessage || "Request failed";
+    throw new Error(apiMessage);
+  }
+
+  if (!isJson) {
+    return {};
+  }
+
+  const data = payload || {};
+  if (data.error) {
+    throw new Error(data.error);
+  }
+  if (data.success === false) {
+    throw new Error(data.error || fallbackErrorMessage || "Request failed");
+  }
+  return data;
 }
 
 function renderChart(datesRaw, countsRaw) {
@@ -167,7 +156,7 @@ function renderChart(datesRaw, countsRaw) {
 
   const dates = asArray(datesRaw).map((x) => String(x));
   const counts = asArray(countsRaw).map((x) => Number(x) || 0);
-  const safeCounts = (counts.length === dates.length)
+  const safeCounts = counts.length === dates.length
     ? counts
     : (counts.concat(new Array(Math.max(0, dates.length - counts.length)).fill(0))).slice(0, dates.length);
 
@@ -216,17 +205,14 @@ function renderLeadsTable() {
   const start = (currentPage - 1) * pageSize;
   const pagedRows = rows.slice(start, start + pageSize);
 
-  const html = pagedRows.map((lead) => {
+  tbody.innerHTML = pagedRows.map((lead) => {
     const id = Number(lead.id) || 0;
-    const createdAt = (lead.datetime_display && lead.datetime_display !== "Unknown")
+    const createdAt = lead.datetime_display
       ? lead.datetime_display
-      : (lead.date_display && lead.date_display !== "Unknown")
-        ? `${lead.date_display} ${lead.time_display || ""}`.trim()
-        : String(lead.created_at || "");
-
+      : String(lead.created_at || "");
     const deleteAction = currentRole === "admin"
       ? `<button class="btn-sm danger delete-btn" data-lead-id="${id}">Delete</button>`
-      : "";
+      : "-";
 
     return `
       <tr id="row-${id}">
@@ -237,12 +223,11 @@ function renderLeadsTable() {
         <td>${escapeHtml(lead.location || "-")}</td>
         <td>${sourceBadge(lead.source)}</td>
         <td style="white-space:nowrap">${escapeHtml(createdAt)}</td>
-        <td>${deleteAction || "-"}</td>
+        <td>${deleteAction}</td>
       </tr>
     `;
   }).join("");
 
-  tbody.innerHTML = html;
   updatePager();
 }
 
@@ -251,7 +236,7 @@ function renderUsersTable() {
   if (!tbody) return;
 
   if (!allUsers.length) {
-    tbody.innerHTML = '<tr><td colspan="7">No staff users found.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:24px;color:#64748b">No staff users found.</td></tr>';
     return;
   }
 
@@ -261,6 +246,7 @@ function renderUsersTable() {
     const activateBtn = isActive
       ? `<button class="secondary deactivate-btn" data-user-id="${id}">Deactivate</button>`
       : `<button class="info activate-btn" data-user-id="${id}">Activate</button>`;
+
     return `
       <tr>
         <td>${id}</td>
@@ -280,9 +266,9 @@ function renderUsersTable() {
   }).join("");
 }
 
-
 async function loadAnalytics() {
-  if (currentRole !== "admin") return;
+  const canvas = document.getElementById("leadChart");
+  if (!canvas) return;
 
   const [stats, growth, sources] = await Promise.all([
     fetchJson("/api/admin/stats", "Unable to fetch stats"),
@@ -305,13 +291,20 @@ async function loadAnalytics() {
 
   renderChart(growth.labels, growth.data);
 
-  const sourceLabels = Object.keys(sources);
+  const sourceLabels = Object.keys(sources).map((key) => {
+    if (String(key).toLowerCase() === "webpage") return "Website";
+    if (String(key).toLowerCase() === "chatbot") return "Chatbot";
+    return key;
+  });
   const sourceData = Object.values(sources);
-  const canvas = document.getElementById("sourceChart");
-  if (canvas && typeof Chart !== "undefined") {
+  const sourceCanvas = document.getElementById("sourceChart");
+  if (sourceCanvas && typeof Chart !== "undefined") {
     const colors = ["#0f766e", "#6366f1", "#9333ea", "#f59e0b", "#ef4444", "#3b82f6"];
-    if (sourceChart) { sourceChart.destroy(); sourceChart = null; }
-    sourceChart = new Chart(canvas, {
+    if (sourceChart) {
+      sourceChart.destroy();
+      sourceChart = null;
+    }
+    sourceChart = new Chart(sourceCanvas, {
       type: "doughnut",
       data: {
         labels: sourceLabels,
@@ -344,7 +337,9 @@ async function loadLeads() {
 }
 
 async function loadUsers() {
-  if (currentRole !== "admin") return;
+  const tbody = document.getElementById("users-body");
+  if (!tbody) return;
+
   const payload = await fetchJson("/api/admin/staff", "Unable to fetch staff users");
   allUsers = asArray(payload && payload.staff);
   renderUsersTable();
@@ -354,18 +349,18 @@ async function refreshDashboard() {
   if (refreshInFlight) return;
   refreshInFlight = true;
   setStatus("Loading dashboard...");
-  const jobs = [loadLeads()];
-  if (currentRole === "admin") jobs.push(loadAnalytics(), loadUsers());
 
   try {
-    const results = await Promise.allSettled(jobs);
-    const failures = results.filter((result) => result.status === "rejected");
-    const hasFailure = failures.length > 0;
-    if (hasFailure) {
-      setStatus("Unable to refresh some dashboard data.", true);
-      return;
+    await loadLeads();
+    if (document.getElementById("leadChart")) {
+      await loadAnalytics();
+    }
+    if (document.getElementById("users-body")) {
+      await loadUsers();
     }
     setStatus("Dashboard updated.");
+  } catch (_error) {
+    setStatus("Unable to refresh some dashboard data.", true);
   } finally {
     refreshInFlight = false;
   }
@@ -408,21 +403,17 @@ async function addStaffUser(event) {
 }
 
 async function activateUser(userId) {
-  await fetchJson(`/api/admin/staff/activate/${userId}`, "Unable to activate user", {
-    method: "PUT",
-  });
+  await fetchJson(`/api/admin/staff/activate/${userId}`, "Unable to activate user", { method: "PUT" });
   await loadUsers();
 }
 
 async function deactivateUser(userId) {
-  await fetchJson(`/api/admin/staff/deactivate/${userId}`, "Unable to deactivate user", {
-    method: "PUT",
-  });
+  await fetchJson(`/api/admin/staff/deactivate/${userId}`, "Unable to deactivate user", { method: "PUT" });
   await loadUsers();
 }
 
 async function setUserRole(userId, role) {
-  await fetchJson(`/api/admin/staff/set-role/${userId}`, "Unable to change role", {
+  await fetchJson(`/api/admin/staff/set-role/${userId}`, "Unable to change user role", {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ role }),
@@ -432,14 +423,8 @@ async function setUserRole(userId, role) {
 
 async function deleteUser(userId) {
   if (!confirm("Delete this user?")) return;
-  await fetchJson(`/api/admin/staff/${userId}`, "Unable to delete user", {
-    method: "DELETE",
-  });
+  await fetchJson(`/api/admin/staff/${userId}`, "Unable to delete user", { method: "DELETE" });
   await loadUsers();
-}
-
-async function logout() {
-  window.location.href = "/logout";
 }
 
 window.addEventListener("DOMContentLoaded", () => {
@@ -453,12 +438,8 @@ window.addEventListener("DOMContentLoaded", () => {
 
   const logoutBtn = document.getElementById("logout-btn");
   if (logoutBtn) {
-    logoutBtn.addEventListener("click", async () => {
-      try {
-        await logout();
-      } catch (_error) {
-        alert("Logout failed. Please try again.");
-      }
+    logoutBtn.addEventListener("click", function () {
+      window.location.href = "/logout";
     });
   }
 
@@ -564,7 +545,7 @@ window.addEventListener("DOMContentLoaded", () => {
     if (!document.hidden) {
       refreshDashboard();
     }
-  }, 20000);
+  }, 60000);
 
   document.addEventListener("visibilitychange", () => {
     if (!document.hidden) {

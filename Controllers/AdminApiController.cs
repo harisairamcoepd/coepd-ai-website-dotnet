@@ -58,7 +58,7 @@ namespace Coepd.Web.Controllers
                         location = x.Location ?? "",
                         source = (x.Source ?? "webpage").ToLower() == "website_form" ? "webpage" : (x.Source ?? "webpage"),
                         created_at = x.CreatedAt,
-                        datetime_display = x.CreatedAt.ToString("dd MMM yyyy hh:mm tt", CultureInfo.InvariantCulture)
+                        datetime_display = TimeZoneHelper.ToDisplayText(x.CreatedAt)
                     })
                     .ToList();
 
@@ -105,7 +105,7 @@ namespace Coepd.Web.Controllers
                     location = x.Location ?? "",
                     source = (x.Source ?? "webpage").ToLower() == "website_form" ? "webpage" : (x.Source ?? "webpage"),
                     created_at = x.CreatedAt,
-                    datetime_display = x.CreatedAt.ToString("dd MMM yyyy hh:mm tt", CultureInfo.InvariantCulture)
+                    datetime_display = TimeZoneHelper.ToDisplayText(x.CreatedAt)
                 })
                 .ToList();
 
@@ -152,7 +152,7 @@ namespace Coepd.Web.Controllers
                         location = x.Location ?? "",
                         source = (x.Source ?? "webpage").ToLower() == "website_form" ? "webpage" : (x.Source ?? "webpage"),
                         created_at = x.CreatedAt,
-                        datetime_display = x.CreatedAt.ToString("dd MMM yyyy hh:mm tt", CultureInfo.InvariantCulture)
+                        datetime_display = TimeZoneHelper.ToDisplayText(x.CreatedAt)
                     })
                     .ToList();
 
@@ -307,6 +307,7 @@ namespace Coepd.Web.Controllers
             if (StorageMode.UseRuntimeStore())
             {
                 var runtimeGrouped = RuntimeStore.GetLeads()
+                    .Where(x => !string.Equals(x.Source, "chatbot_draft", StringComparison.OrdinalIgnoreCase))
                     .GroupBy(x => (x.Source == null || x.Source == "website" || x.Source == "website_form") ? "webpage" : x.Source)
                     .ToDictionary(g => g.Key, g => g.Count());
                 return Json(runtimeGrouped, JsonRequestBehavior.AllowGet);
@@ -315,6 +316,7 @@ namespace Coepd.Web.Controllers
             try
             {
                 var grouped = _db.Leads
+                .Where(x => x.Source != "chatbot_draft")
                 .GroupBy(x => (x.Source == null || x.Source == "website" || x.Source == "website_form") ? "webpage" : x.Source)
                 .Select(g => new { key = g.Key, count = g.Count() })
                 .ToList()
@@ -324,6 +326,7 @@ namespace Coepd.Web.Controllers
             catch
             {
                 var grouped = RuntimeStore.GetLeads()
+                    .Where(x => !string.Equals(x.Source, "chatbot_draft", StringComparison.OrdinalIgnoreCase))
                     .GroupBy(x => (x.Source == null || x.Source == "website" || x.Source == "website_form") ? "webpage" : x.Source)
                     .ToDictionary(g => g.Key, g => g.Count());
                 return Json(grouped, JsonRequestBehavior.AllowGet);
@@ -473,7 +476,7 @@ namespace Coepd.Web.Controllers
                         email = x.Email,
                         role = x.Role,
                         status = x.Status,
-                        created_at = x.CreatedAt.ToString("dd MMM yyyy hh:mm tt", CultureInfo.InvariantCulture)
+                        created_at = TimeZoneHelper.ToDisplayText(x.CreatedAt)
                     })
                     .ToList();
                 return Json(new { staff = runtimeStaff }, JsonRequestBehavior.AllowGet);
@@ -490,7 +493,7 @@ namespace Coepd.Web.Controllers
                     email = x.Email,
                     role = x.Role,
                     status = x.Status,
-                    created_at = x.CreatedAt.ToString("dd MMM yyyy hh:mm tt", CultureInfo.InvariantCulture)
+                    created_at = TimeZoneHelper.ToDisplayText(x.CreatedAt)
                 })
                 .ToList();
                 return Json(new { staff }, JsonRequestBehavior.AllowGet);
@@ -506,7 +509,7 @@ namespace Coepd.Web.Controllers
                         email = x.Email,
                         role = x.Role,
                         status = x.Status,
-                        created_at = x.CreatedAt.ToString("dd MMM yyyy hh:mm tt", CultureInfo.InvariantCulture)
+                        created_at = TimeZoneHelper.ToDisplayText(x.CreatedAt)
                     })
                     .ToList();
                 return Json(new { staff }, JsonRequestBehavior.AllowGet);

@@ -29,7 +29,7 @@
         <p class="auth-subtitle">Use your staff credentials to access the dashboard.</p>
         <p class="auth-error" role="alert">{{ error or '' }}</p>
 
-        <form class="auth-form" method="post" action="/staff">
+        <form class="auth-form" method="post" action="/staff" id="staff-login-form">
           <label for="email">Email
             <input id="email" name="email" type="email" required autocomplete="email" placeholder="Enter staff email" />
           </label>
@@ -44,5 +44,6 @@
       </div>
     </section>
   </main>
+  <script src="/static/auth.js?v=1"></script>
 </body>
 </html>

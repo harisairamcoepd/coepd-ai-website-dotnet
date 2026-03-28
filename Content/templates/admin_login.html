@@ -29,7 +29,7 @@
         <p class="auth-subtitle">Sign in with your admin account to continue.</p>
         <p class="auth-error" role="alert">{{ error or '' }}</p>
 
-        <form class="auth-form" method="post" action="/admin">
+        <form class="auth-form" method="post" action="/admin" id="admin-login-form">
           <label for="email">Email
             <input id="email" name="email" type="text" required autocomplete="username" placeholder="Enter admin email" />
           </label>
@@ -44,5 +44,6 @@
       </div>
     </section>
   </main>
+  <script src="/static/auth.js?v=1"></script>
 </body>
 </html>
