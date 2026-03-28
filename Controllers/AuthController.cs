@@ -15,7 +15,10 @@ namespace Coepd.Web.Controllers
         private readonly CoepdDbContext _db = new CoepdDbContext();
 
         [HttpGet]
-        public ActionResult Staff() => RenderTemplate("staff_login.html", null);
+        public ActionResult Staff()
+        {
+            return RenderTemplate("staff_login.html", null);
+        }
 
         [HttpPost]
         public ActionResult Staff(string email, string password)
@@ -27,7 +30,10 @@ namespace Coepd.Web.Controllers
         }
 
         [HttpGet]
-        public ActionResult Admin() => RenderTemplate("admin_login.html", null);
+        public ActionResult Admin()
+        {
+            return RenderTemplate("admin_login.html", null);
+        }
 
         [HttpPost]
         public ActionResult Admin(string email, string password)
@@ -109,6 +115,11 @@ namespace Coepd.Web.Controllers
                 return new Staff { Id = 0, Name = "Admin", Email = adminEmail, Role = "admin", Status = "active" };
             }
 
+            if (StorageMode.UseRuntimeStore())
+            {
+                return AuthenticateFromRuntimeStore(normalizedEmail, password, requiredRole);
+            }
+
             try
             {
                 var staff = _db.Staff.FirstOrDefault(x => x.Email.ToLower() == normalizedEmail);
@@ -119,12 +130,17 @@ namespace Coepd.Web.Controllers
             }
             catch
             {
-                var staff = RuntimeStore.FindStaffByEmail(normalizedEmail);
-                if (staff == null || (staff.Status ?? "").ToLower() != "active") return null;
-                if (!BCrypt.Net.BCrypt.Verify(password ?? string.Empty, staff.PasswordHash ?? string.Empty)) return null;
-                if (!string.IsNullOrWhiteSpace(requiredRole) && !string.Equals(staff.Role, requiredRole, StringComparison.OrdinalIgnoreCase)) return null;
-                return staff;
+                return AuthenticateFromRuntimeStore(normalizedEmail, password, requiredRole);
             }
+        }
+
+        private static Staff AuthenticateFromRuntimeStore(string normalizedEmail, string password, string requiredRole)
+        {
+            var staff = RuntimeStore.FindStaffByEmail(normalizedEmail);
+            if (staff == null || (staff.Status ?? "").ToLower() != "active") return null;
+            if (!BCrypt.Net.BCrypt.Verify(password ?? string.Empty, staff.PasswordHash ?? string.Empty)) return null;
+            if (!string.IsNullOrWhiteSpace(requiredRole) && !string.Equals(staff.Role, requiredRole, StringComparison.OrdinalIgnoreCase)) return null;
+            return staff;
         }
 
         private void SetSession(Staff user)
@@ -152,5 +168,3 @@ namespace Coepd.Web.Controllers
         }
     }
 }
-
-

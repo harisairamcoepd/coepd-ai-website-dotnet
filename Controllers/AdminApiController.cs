@@ -18,9 +18,56 @@ namespace Coepd.Web.Controllers
         [RoleAuthorize("admin", "staff")]
         public ActionResult Leads(string date = null, string source = null, string search = null)
         {
+            if (StorageMode.UseRuntimeStore())
+            {
+                var list = RuntimeStore.GetLeads().Where(x => !string.Equals(x.Source, "chatbot_draft", StringComparison.OrdinalIgnoreCase)).AsQueryable();
+
+                if (!string.IsNullOrWhiteSpace(date) && DateTime.TryParse(date, out var runtimeDate))
+                {
+                    var dayStart = runtimeDate.Date;
+                    var dayEnd = dayStart.AddDays(1);
+                    list = list.Where(x => x.CreatedAt >= dayStart && x.CreatedAt < dayEnd);
+                }
+
+                if (!string.IsNullOrWhiteSpace(source) && source.ToLowerInvariant() != "all")
+                {
+                    var s = source.Trim().ToLowerInvariant();
+                    if (s == "webpage") list = list.Where(x => x.Source == "webpage" || x.Source == "website" || x.Source == "website_form");
+                    else list = list.Where(x => (x.Source ?? "").ToLower() == s);
+                }
+
+                if (!string.IsNullOrWhiteSpace(search))
+                {
+                    var q = search.Trim().ToLowerInvariant();
+                    list = list.Where(x =>
+                        (x.Name ?? "").ToLower().Contains(q) ||
+                        (x.Email ?? "").ToLower().Contains(q) ||
+                        (x.Phone ?? "").ToLower().Contains(q) ||
+                        (x.Location ?? "").ToLower().Contains(q));
+                }
+
+                var runtimeLeads = list
+                    .OrderByDescending(x => x.CreatedAt)
+                    .Take(2000)
+                    .Select(x => new
+                    {
+                        id = x.Id,
+                        name = x.Name,
+                        phone = x.Phone,
+                        email = x.Email,
+                        location = x.Location ?? "",
+                        source = (x.Source ?? "webpage").ToLower() == "website_form" ? "webpage" : (x.Source ?? "webpage"),
+                        created_at = x.CreatedAt,
+                        datetime_display = x.CreatedAt.ToString("dd MMM yyyy hh:mm tt", CultureInfo.InvariantCulture)
+                    })
+                    .ToList();
+
+                return Json(new { leads = runtimeLeads }, JsonRequestBehavior.AllowGet);
+            }
+
             try
             {
-                var query = _db.Leads.AsQueryable();
+                var query = _db.Leads.Where(x => x.Source != "chatbot_draft").AsQueryable();
 
             if (!string.IsNullOrWhiteSpace(date) && DateTime.TryParse(date, out var d))
             {
@@ -67,6 +114,7 @@ namespace Coepd.Web.Controllers
             catch
             {
                 var list = RuntimeStore.GetLeads().AsQueryable();
+                list = list.Where(x => !string.Equals(x.Source, "chatbot_draft", StringComparison.OrdinalIgnoreCase));
 
                 if (!string.IsNullOrWhiteSpace(date) && DateTime.TryParse(date, out var d))
                 {
@@ -116,6 +164,12 @@ namespace Coepd.Web.Controllers
         [RoleAuthorize("admin")]
         public ActionResult Leads(int id)
         {
+            if (StorageMode.UseRuntimeStore())
+            {
+                var removed = RuntimeStore.RemoveLead(id);
+                return Json(new { success = removed, error = removed ? (string)null : "Lead not found" });
+            }
+
             try
             {
                 var lead = _db.Leads.FirstOrDefault(x => x.Id == id);
@@ -135,6 +189,24 @@ namespace Coepd.Web.Controllers
         [RoleAuthorize("admin")]
         public ActionResult Stats()
         {
+            if (StorageMode.UseRuntimeStore())
+            {
+                var leads = RuntimeStore.GetLeads().Where(x => !string.Equals(x.Source, "chatbot_draft", StringComparison.OrdinalIgnoreCase)).ToList();
+                var now = DateTime.UtcNow;
+                var today = now.Date;
+                var weekStart = today.AddDays(-7);
+                var monthStart = new DateTime(now.Year, now.Month, 1);
+                return Json(new
+                {
+                    total_leads = leads.Count,
+                    today_leads = leads.Count(x => x.CreatedAt >= today),
+                    week_leads = leads.Count(x => x.CreatedAt >= weekStart),
+                    month_leads = leads.Count(x => x.CreatedAt >= monthStart),
+                    chatbot_leads = leads.Count(x => x.Source == "chatbot"),
+                    website_leads = leads.Count(x => x.Source == "webpage" || x.Source == "website" || x.Source == "website_form")
+                }, JsonRequestBehavior.AllowGet);
+            }
+
             try
             {
                 var now = DateTime.UtcNow;
@@ -142,12 +214,13 @@ namespace Coepd.Web.Controllers
             var weekStart = today.AddDays(-7);
             var monthStart = new DateTime(now.Year, now.Month, 1);
 
-            var total = _db.Leads.Count();
-            var todayCount = _db.Leads.Count(x => x.CreatedAt >= today);
-            var weekCount = _db.Leads.Count(x => x.CreatedAt >= weekStart);
-            var monthCount = _db.Leads.Count(x => x.CreatedAt >= monthStart);
-            var chatbot = _db.Leads.Count(x => x.Source == "chatbot");
-            var webpage = _db.Leads.Count(x => x.Source == "webpage" || x.Source == "website" || x.Source == "website_form");
+            var leadQuery = _db.Leads.Where(x => x.Source != "chatbot_draft");
+            var total = leadQuery.Count();
+            var todayCount = leadQuery.Count(x => x.CreatedAt >= today);
+            var weekCount = leadQuery.Count(x => x.CreatedAt >= weekStart);
+            var monthCount = leadQuery.Count(x => x.CreatedAt >= monthStart);
+            var chatbot = leadQuery.Count(x => x.Source == "chatbot");
+            var webpage = leadQuery.Count(x => x.Source == "webpage" || x.Source == "website" || x.Source == "website_form");
 
                 return Json(new
             {
@@ -161,7 +234,7 @@ namespace Coepd.Web.Controllers
             }
             catch
             {
-                var leads = RuntimeStore.GetLeads();
+                var leads = RuntimeStore.GetLeads().Where(x => !string.Equals(x.Source, "chatbot_draft", StringComparison.OrdinalIgnoreCase)).ToList();
                 var now = DateTime.UtcNow;
                 var today = now.Date;
                 var weekStart = today.AddDays(-7);
@@ -182,6 +255,21 @@ namespace Coepd.Web.Controllers
         [RoleAuthorize("admin")]
         public ActionResult LeadGrowth()
         {
+            if (StorageMode.UseRuntimeStore())
+            {
+                var rows = RuntimeStore.GetLeads();
+                var start = DateTime.UtcNow.Date.AddDays(-29);
+                var labels = Enumerable.Range(0, 30).Select(i => start.AddDays(i).ToString("dd MMM")).ToList();
+                var data = Enumerable.Range(0, 30)
+                    .Select(i =>
+                    {
+                        var d = start.AddDays(i);
+                        return rows.Count(x => x.CreatedAt >= d && x.CreatedAt < d.AddDays(1));
+                    })
+                    .ToList();
+                return Json(new { labels, data }, JsonRequestBehavior.AllowGet);
+            }
+
             try
             {
                 var start = DateTime.UtcNow.Date.AddDays(-29);
@@ -216,6 +304,14 @@ namespace Coepd.Web.Controllers
         [RoleAuthorize("admin")]
         public ActionResult SourceBreakdown()
         {
+            if (StorageMode.UseRuntimeStore())
+            {
+                var runtimeGrouped = RuntimeStore.GetLeads()
+                    .GroupBy(x => (x.Source == null || x.Source == "website" || x.Source == "website_form") ? "webpage" : x.Source)
+                    .ToDictionary(g => g.Key, g => g.Count());
+                return Json(runtimeGrouped, JsonRequestBehavior.AllowGet);
+            }
+
             try
             {
                 var grouped = _db.Leads
@@ -238,6 +334,34 @@ namespace Coepd.Web.Controllers
         [RoleAuthorize("admin", "staff")]
         public ActionResult Export(string date = null, string source = null, string search = null)
         {
+            if (StorageMode.UseRuntimeStore())
+            {
+                var runtimeLeads = RuntimeStore.GetLeads()
+                    .OrderByDescending(x => x.CreatedAt)
+                    .ToList();
+
+                var runtimeSb = new StringBuilder();
+                runtimeSb.AppendLine("Id,Name,Phone,Email,Location,InterestedDomain,Whatsapp,Source,CreatedAtUtc");
+                foreach (var row in runtimeLeads)
+                {
+                    runtimeSb.AppendLine(string.Join(",",
+                        Csv(row.Id.ToString()),
+                        Csv(row.Name),
+                        Csv(row.Phone),
+                        Csv(row.Email),
+                        Csv(row.Location),
+                        Csv(row.InterestedDomain),
+                        Csv(row.Whatsapp),
+                        Csv((row.Source == "website" || row.Source == "website_form") ? "webpage" : row.Source),
+                        Csv(row.CreatedAt.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture))
+                    ));
+                }
+
+                var runtimeBytes = Encoding.UTF8.GetBytes(runtimeSb.ToString());
+                var runtimeFileName = "coepd_leads_" + DateTime.UtcNow.ToString("yyyyMMdd_HHmmss", CultureInfo.InvariantCulture) + ".csv";
+                return File(runtimeBytes, "text/csv", runtimeFileName);
+            }
+
             try
             {
                 var query = _db.Leads.AsQueryable();
@@ -338,6 +462,23 @@ namespace Coepd.Web.Controllers
         [RoleAuthorize("admin")]
         public ActionResult Staff()
         {
+            if (StorageMode.UseRuntimeStore())
+            {
+                var runtimeStaff = RuntimeStore.GetStaff()
+                    .OrderByDescending(x => x.CreatedAt)
+                    .Select(x => new
+                    {
+                        id = x.Id,
+                        name = x.Name,
+                        email = x.Email,
+                        role = x.Role,
+                        status = x.Status,
+                        created_at = x.CreatedAt.ToString("dd MMM yyyy hh:mm tt", CultureInfo.InvariantCulture)
+                    })
+                    .ToList();
+                return Json(new { staff = runtimeStaff }, JsonRequestBehavior.AllowGet);
+            }
+
             try
             {
                 var staff = _db.Staff
@@ -376,6 +517,32 @@ namespace Coepd.Web.Controllers
         [RoleAuthorize("admin")]
         public ActionResult Staff(StaffCreateRequest payload)
         {
+            if (StorageMode.UseRuntimeStore())
+            {
+                payload = payload ?? ReadBody<StaffCreateRequest>();
+                if (payload == null || string.IsNullOrWhiteSpace(payload.Email) || string.IsNullOrWhiteSpace(payload.Password) || string.IsNullOrWhiteSpace(payload.Name))
+                    return Json(new { success = false, error = "Invalid payload" });
+
+                var email = payload.Email.Trim().ToLowerInvariant();
+                if (RuntimeStore.GetStaff().Any(x => (x.Email ?? "").ToLowerInvariant() == email))
+                    return Json(new { success = false, error = "Email already exists" });
+
+                var role = (payload.Role ?? "staff").Trim().ToLowerInvariant();
+                if (role != "admin" && role != "staff") role = "staff";
+
+                var user = new Staff
+                {
+                    Name = payload.Name.Trim(),
+                    Email = email,
+                    PasswordHash = BCrypt.Net.BCrypt.HashPassword(payload.Password.Trim()),
+                    Role = role,
+                    Status = "active",
+                    CreatedAt = DateTime.UtcNow
+                };
+                var id = RuntimeStore.AddStaff(user);
+                return Json(new { success = true, id, persisted = true, storage = "runtime-store" });
+            }
+
             try
             {
                 payload = payload ?? ReadBody<StaffCreateRequest>();
@@ -433,6 +600,12 @@ namespace Coepd.Web.Controllers
         [RoleAuthorize("admin")]
         public ActionResult Activate(int id)
         {
+            if (StorageMode.UseRuntimeStore())
+            {
+                var ok = RuntimeStore.UpdateStaffStatus(id, "active");
+                return Json(new { success = ok, error = ok ? (string)null : "User not found" });
+            }
+
             try
             {
                 var user = _db.Staff.FirstOrDefault(x => x.Id == id);
@@ -452,6 +625,12 @@ namespace Coepd.Web.Controllers
         [RoleAuthorize("admin")]
         public ActionResult Deactivate(int id)
         {
+            if (StorageMode.UseRuntimeStore())
+            {
+                var ok = RuntimeStore.UpdateStaffStatus(id, "inactive");
+                return Json(new { success = ok, error = ok ? (string)null : "User not found" });
+            }
+
             try
             {
                 var user = _db.Staff.FirstOrDefault(x => x.Id == id);
@@ -471,6 +650,15 @@ namespace Coepd.Web.Controllers
         [RoleAuthorize("admin")]
         public ActionResult SetRole(int id)
         {
+            if (StorageMode.UseRuntimeStore())
+            {
+                var runtimePayload = ReadBody<SetRoleRequest>();
+                var runtimeRole = (runtimePayload?.Role ?? "staff").Trim().ToLowerInvariant();
+                if (runtimeRole != "admin" && runtimeRole != "staff") return Json(new { success = false, error = "Invalid role" });
+                var ok = RuntimeStore.UpdateStaffRole(id, runtimeRole);
+                return Json(new { success = ok, error = ok ? (string)null : "User not found" });
+            }
+
             try
             {
                 var user = _db.Staff.FirstOrDefault(x => x.Id == id);
@@ -496,6 +684,12 @@ namespace Coepd.Web.Controllers
         [RoleAuthorize("admin")]
         public ActionResult Staff(int id)
         {
+            if (StorageMode.UseRuntimeStore())
+            {
+                var ok = RuntimeStore.RemoveStaff(id);
+                return Json(new { success = ok, error = ok ? (string)null : "User not found" });
+            }
+
             try
             {
                 var user = _db.Staff.FirstOrDefault(x => x.Id == id);

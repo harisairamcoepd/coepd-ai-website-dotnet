@@ -59,7 +59,7 @@
     <Reference Include="System.Xml" />
     <Reference Include="System.Net.Http" />
     <Reference Include="Microsoft.Web.Infrastructure">
-      <HintPath>..\packages\Microsoft.Web.Infrastructure.1.0.0.0\lib\net40\Microsoft.Web.Infrastructure.dll</HintPath>
+      <HintPath>packages\Microsoft.Web.Infrastructure.1.0.0.0\lib\net40\Microsoft.Web.Infrastructure.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="EntityFramework">
@@ -90,6 +90,7 @@
     <Compile Include="Controllers\\AnalyticsController.cs" />
     <Compile Include="Infrastructure\\RoleAuthorizeAttribute.cs" />
     <Compile Include="Infrastructure\\RuntimeStore.cs" />
+    <Compile Include="Infrastructure\\StorageMode.cs" />
     <Compile Include="Models\\CoepdDbContext.cs" />
     <Compile Include="Models\\Lead.cs" />
     <Compile Include="Models\\Staff.cs" />

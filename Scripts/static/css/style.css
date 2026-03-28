@@ -1986,34 +1986,6 @@ body.lightbox-open {
 .cta-strip-text p { font-size: 14px; color: var(--text-secondary); line-height: 1.6; max-width: 480px; }
 .cta-strip-actions { display: flex; gap: 10px; flex-shrink: 0; }
 
-/* CHATBOT POLISH â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
-#coepd-chatbot-widget .cb-head {
-  background: linear-gradient(135deg, var(--primary), var(--secondary)) !important;
-  backdrop-filter: blur(12px) !important;
-  -webkit-backdrop-filter: blur(12px) !important;
-}
-#coepd-chatbot-widget .cb-bubble {
-  animation: cbMsgSlideIn .35s var(--ease-spring) both;
-}
-@keyframes cbMsgSlideIn {
-  from { opacity: 0; transform: translateY(10px) scale(.96); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
-}
-#coepd-chatbot-widget .cb-bubble { border-radius: 16px !important; }
-#coepd-chatbot-widget .cb-row.user .cb-bubble { background: linear-gradient(135deg, rgba(79,70,229,.1), rgba(124,58,237,.08)) !important; }
-#coepd-chatbot-widget .cb-input-row button { background: var(--accent) !important; border-radius: var(--radius-sm) !important; }
-#coepd-chatbot-widget .cb-input-row button:hover { background: var(--accent-dark) !important; }
-#coepd-chatbot-launcher {
-  border-radius: 999px !important;
-  background: linear-gradient(135deg, var(--primary), var(--secondary), var(--accent)) !important;
-  box-shadow: 0 16px 34px rgba(79,70,229,.3) !important;
-  transition: transform .25s var(--ease), box-shadow .25s var(--ease) !important;
-}
-#coepd-chatbot-launcher:hover {
-  transform: translateY(-4px) scale(1.05) !important;
-  box-shadow: 0 24px 48px rgba(79,70,229,.4) !important;
-}
-
 /* â”€â”€â”€ TOOL ICON SVG STYLING â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .tool-icon svg { transition: transform .3s var(--ease); }
 .tool-card:hover .tool-icon svg { transform: scale(1.1); }

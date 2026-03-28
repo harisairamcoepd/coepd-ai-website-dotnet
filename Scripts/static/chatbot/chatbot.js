@@ -2,20 +2,21 @@
   if (window.__COEPD_CHATBOT_LOADED__) return;
   window.__COEPD_CHATBOT_LOADED__ = true;
 
-  const CHATBOT_FLOW_VERSION = "2026-03-16-no-whatsapp-step";
+  const CHATBOT_FLOW_VERSION = "2026-03-28-simple-chat";
 
   const state = {
     isOpen: false,
     userId: localStorage.getItem("coepd_chat_uid") || `coepd_${Date.now()}`,
     loading: false,
     started: false,
+    initialized: false,
   };
   localStorage.setItem("coepd_chat_uid", state.userId);
 
   function injectStyles() {
     const css = document.createElement("link");
     css.rel = "stylesheet";
-    css.href = "/chatbot/chatbot.css";
+    css.href = "/chatbot/chatbot.css?v=7";
     document.head.appendChild(css);
   }
 
@@ -31,13 +32,13 @@
     widget.innerHTML = `
       <div class="cb-head">
         <div>
-          <div class="cb-title">COEPD AI Advisor</div>
-          <div class="cb-status">Online</div>
+          <div class="cb-title">COEPD Support</div>
+          <div class="cb-status">Lead Assistance</div>
         </div>
         <div class="cb-head-actions">
           <button type="button" id="cb-min">_</button>
-          <button type="button" id="cb-reset">R</button>
-          <button type="button" id="cb-close">X</button>
+          <button type="button" id="cb-reset">Reset</button>
+          <button type="button" id="cb-close">Close</button>
         </div>
       </div>
       <div class="cb-progress"><div id="cb-progress-fill"></div></div>
@@ -45,8 +46,8 @@
       <div class="cb-input-wrap">
         <div class="cb-options" id="cb-options"></div>
         <form id="cb-form" class="cb-input-row">
-          <input id="cb-input" placeholder="Type your message..." autocomplete="off" />
-          <button type="submit">></button>
+          <input id="cb-input" placeholder="Enter your message..." autocomplete="off" />
+          <button type="submit">Send</button>
         </form>
       </div>
     `;
@@ -71,6 +72,14 @@
   function appendMessage(role, html, typing) {
     const log = document.getElementById("cb-log");
     if (!log) return null;
+    const normalizedHtml = typing ? "" : formatMessage(html);
+    const lastRow = log.lastElementChild;
+    if (!typing && lastRow && lastRow.classList.contains(role)) {
+      const lastBubble = lastRow.querySelector(".cb-bubble");
+      if (lastBubble && lastBubble.getAttribute("data-message-html") === normalizedHtml) {
+        return lastRow;
+      }
+    }
     const row = document.createElement("div");
     row.className = `cb-row ${role}`;
     const bubble = document.createElement("div");
@@ -79,7 +88,8 @@
     if (typing) {
       bubble.innerHTML = '<div class="cb-typing"><span></span><span></span><span></span></div>';
     } else {
-      bubble.innerHTML = html.replace(/\n/g, "<br>").replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
+      bubble.innerHTML = normalizedHtml;
+      bubble.setAttribute("data-message-html", normalizedHtml);
       const time = document.createElement("div");
       time.className = "cb-time";
       time.textContent = nowTime();
@@ -92,27 +102,33 @@
     return row;
   }
 
+  function escapeHtml(value) {
+    return String(value || "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+
+  function formatMessage(value) {
+    let html = escapeHtml(value);
+    html = html.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
+    html = html.replace(/https:\/\/[^\s<]+/g, (url) => `<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>`);
+    html = html.replace(/\+91\s?88850\s?24387/g, '<a href="tel:+918885024387">+91 88850 24387</a>');
+    html = html.replace(/\n/g, "<br>");
+    return html;
+  }
+
   function setProgress(value) {
     const bar = document.getElementById("cb-progress-fill");
+    if (!bar) return;
     bar.style.width = `${Math.max(0, Math.min(100, value || 0))}%`;
   }
 
-  function setOptions(options) {
+  function setOptions() {
     const wrap = document.getElementById("cb-options");
-    wrap.innerHTML = "";
-    (options || []).forEach((opt) => {
-      const label = typeof opt === "string" ? opt : String(opt.label || opt.value || "").trim();
-      if (!label) return;
-      if (/whatsapp\s*number/i.test(label)) return;
-      const btn = document.createElement("button");
-      btn.type = "button";
-      btn.textContent = label;
-      btn.addEventListener("click", function () {
-        if (state.loading) return;
-        sendMessage(label);
-      });
-      wrap.appendChild(btn);
-    });
+    if (wrap) wrap.innerHTML = "";
   }
 
   function setInputEnabled(enabled) {
@@ -187,33 +203,16 @@
 
       const data = await response.json();
       let botText = data.reply || data.text || "No response available.";
-      if (/whatsapp\s*number|10-?\s*digit\s*whatsapp/i.test(botText)) {
-        botText = "Thank you for sharing your details.\nOur advisor will contact you shortly.";
-      }
       if (typingEl) typingEl.remove();
       appendMessage("bot", botText);
-      if (data.lead_payload) {
-        const saved = await submitLeadPayload(data.lead_payload);
-        if (!saved) {
-          appendMessage(
-            "bot",
-            "We could not save your details right now. Please share once again or submit via the contact form."
-          );
-        }
-      }
-      setOptions(data.options || []);
+      state.initialized = true;
+      setOptions();
       setProgress(data.meta && typeof data.meta.progress === "number" ? data.meta.progress : 0);
       if (data.placeholder) input.placeholder = data.placeholder;
     } catch (_err) {
       if (typingEl) typingEl.remove();
-      appendMessage("bot", "I'm sorry, I'm having trouble answering that right now.\nBut I can still help you book a free demo session.");
-      setOptions([
-        "Book Free Demo",
-        "Program Benefits",
-        "Course Details",
-        "Duration",
-        "Placement Support",
-      ]);
+      appendMessage("bot", "Something went wrong. Please try again.");
+      setOptions();
     } finally {
       state.loading = false;
       setInputEnabled(true);
@@ -228,7 +227,7 @@
     const input = document.getElementById("cb-input");
 
     function ensureChatStarted() {
-      if (state.started) return;
+      if (state.started || state.initialized || document.getElementById("cb-log")?.children.length) return;
       state.started = true;
       const storedFlowVersion = localStorage.getItem("coepd_chat_flow_version");
       if (storedFlowVersion !== CHATBOT_FLOW_VERSION) {
@@ -264,8 +263,9 @@
     document.getElementById("cb-reset").addEventListener("click", function () {
       document.getElementById("cb-log").innerHTML = "";
       setProgress(0);
-      setOptions([]);
+      setOptions();
       state.started = true;
+      state.initialized = false;
       sendMessage("__restart__", false);
     });
 

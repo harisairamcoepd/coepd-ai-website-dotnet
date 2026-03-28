@@ -40,12 +40,21 @@ namespace Coepd.Web.Controllers
         }
 
         [HttpGet]
-        public ActionResult LocationTrends() => CityDistribution();
+        public ActionResult LocationTrends()
+        {
+            return CityDistribution();
+        }
 
         [HttpGet]
-        public ActionResult ExperienceTrends() => ExperienceDistribution();
+        public ActionResult ExperienceTrends()
+        {
+            return ExperienceDistribution();
+        }
 
         [HttpGet]
-        public ActionResult DomainTrends() => TopIndustries();
+        public ActionResult DomainTrends()
+        {
+            return TopIndustries();
+        }
     }
 }

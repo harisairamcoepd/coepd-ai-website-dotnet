@@ -3,6 +3,7 @@ using Coepd.Web.Infrastructure;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Concurrent;
+using System.Data.Entity;
 using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -17,20 +18,40 @@ namespace Coepd.Web.Controllers
         private static readonly Regex PhoneRegex = new Regex(@"^\d{10}$", RegexOptions.Compiled);
         private static readonly Regex EmailRegex = new Regex(@"^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$", RegexOptions.Compiled);
 
-        private const string InitialGreeting = "Welcome to COEPD\nHow can I help you know?";
-        private const string DetailsPrompt = "Thank you for reaching out\nTo assist you better, please share your details.";
-        private const string AskName = "May I know your name?";
+        private const string InitialGreeting = "Hi, welcome to COEPD. How can I help you?";
+        private const string AskName = "Please share your name.";
         private const string AskPhone = "Please share your phone number.";
-        private const string AskEmail = "Please provide your email address.";
-        private const string AskLocation = "Your current location?";
-        private const string FinalMessage = "Thank you for sharing your details.\nOur team will reach out to you shortly.";
+        private const string AskEmail = "Please share your email address.";
+        private const string AskLocation = "Please share your location.";
+        private const string FinalMessage = "Thank you for sharing your details. Our team will contact you shortly.\nFor more queries call +91 88850 24387 or visit our office at Hyderabad:\nhttps://www.google.com/maps/search/?api=1&query=IIIrd+Floor+Besides+Police+Station+SR+Nagar+Main+Rd+Srinivasa+Nagar+Sanjeeva+Reddy+Nagar+Hyderabad+Telangana+500038";
 
         [HttpGet]
         public ActionResult Index()
         {
+            if (StorageMode.UseRuntimeStore())
+            {
+                var runtimeLeads = RuntimeStore.GetLeads()
+                    .Where(x => !string.Equals(x.Source, "chatbot_draft", StringComparison.OrdinalIgnoreCase))
+                    .OrderByDescending(x => x.CreatedAt)
+                    .Select(x => new
+                    {
+                        id = x.Id,
+                        name = x.Name,
+                        phone = x.Phone,
+                        email = x.Email,
+                        location = x.Location ?? "",
+                        interested_domain = x.InterestedDomain ?? "",
+                        whatsapp = x.Whatsapp ?? "",
+                        source = x.Source ?? "webpage",
+                        created_at = x.CreatedAt
+                    }).ToList();
+                return Json(runtimeLeads, JsonRequestBehavior.AllowGet);
+            }
+
             try
             {
                 var leads = _db.Leads
+                    .Where(x => x.Source != "chatbot_draft")
                     .OrderByDescending(x => x.CreatedAt)
                     .Select(x => new
                     {
@@ -49,6 +70,7 @@ namespace Coepd.Web.Controllers
             catch
             {
                 var leads = RuntimeStore.GetLeads()
+                    .Where(x => !string.Equals(x.Source, "chatbot_draft", StringComparison.OrdinalIgnoreCase))
                     .OrderByDescending(x => x.CreatedAt)
                     .Select(x => new
                     {
@@ -87,6 +109,21 @@ namespace Coepd.Web.Controllers
                 CreatedAt = DateTime.UtcNow
             };
 
+            if (StorageMode.UseRuntimeStore())
+            {
+                var fallbackId = RuntimeStore.AddLead(lead);
+                return Json(new
+                {
+                    ok = true,
+                    success = true,
+                    id = fallbackId,
+                    source = lead.Source,
+                    created_at = lead.CreatedAt,
+                    persisted = true,
+                    storage = "runtime-store"
+                });
+            }
+
             try
             {
                 _db.Leads.Add(lead);
@@ -117,13 +154,22 @@ namespace Coepd.Web.Controllers
         }
 
         [HttpPost]
-        public ActionResult Lead(LeadCreateRequest payload) => Index(payload);
+        public ActionResult Lead(LeadCreateRequest payload)
+        {
+            return Index(payload);
+        }
 
         [HttpPost]
-        public ActionResult Contact(LeadCreateRequest payload) => Index(payload);
+        public ActionResult Contact(LeadCreateRequest payload)
+        {
+            return Index(payload);
+        }
 
         [HttpPost]
-        public ActionResult Enquiry(LeadCreateRequest payload) => Index(payload);
+        public ActionResult Enquiry(LeadCreateRequest payload)
+        {
+            return Index(payload);
+        }
 
         [HttpPost]
         public ActionResult Chat()
@@ -144,7 +190,7 @@ namespace Coepd.Web.Controllers
             if (message == "__restart__")
             {
                 ChatSessions[userId] = new ChatSessionState();
-                return BuildChatResponse(InitialGreeting, "Type your message...", 5, "greeting");
+                return BuildChatResponse(InitialGreeting, "Say hi or hello", 10, "greeting");
             }
 
             var session = ChatSessions.GetOrAdd(userId, _ => new ChatSessionState());
@@ -154,56 +200,67 @@ namespace Coepd.Web.Controllers
                 switch (session.Stage)
                 {
                     case "collect_name":
-                        return BuildChatResponse(AskName, "Enter your full name", 20, "collect_name");
+                        return BuildChatResponse(AskName, "Enter your name", 25, "collect_name");
                     case "collect_phone":
-                        return BuildChatResponse(AskPhone, "10-digit phone number", 40, "collect_phone");
+                        return BuildChatResponse(AskPhone, "Enter your phone number", 50, "collect_phone");
                     case "collect_email":
-                        return BuildChatResponse(AskEmail, "name@example.com", 60, "collect_email");
+                        return BuildChatResponse(AskEmail, "Enter your email", 75, "collect_email");
                     case "collect_location":
-                        return BuildChatResponse(AskLocation, "e.g. Hyderabad", 80, "collect_location");
+                        return BuildChatResponse(AskLocation, "Enter your location", 90, "collect_location");
                     case "completed":
                         return BuildChatResponse(FinalMessage, "Type your message...", 100, "completed");
                     default:
-                        return BuildChatResponse(InitialGreeting, "Type your message...", 5, "greeting");
+                        session.Stage = "greeting";
+                        return BuildChatResponse(InitialGreeting, "Say hi or hello", 10, "greeting");
                 }
             }
 
             if (session.Stage == "greeting")
             {
+                var normalized = message.ToLowerInvariant();
+                if (normalized != "hi" && normalized != "hello")
+                {
+                    return BuildChatResponse("Please say hi or hello to continue.", "Say hi or hello", 10, "greeting");
+                }
+
                 session.Stage = "collect_name";
-                return BuildChatResponse(DetailsPrompt + "\n\n" + AskName, "Enter your full name", 20, "collect_name");
+                return BuildChatResponse(AskName, "Enter your name", 25, "collect_name");
             }
 
             if (session.Stage == "collect_name")
             {
                 if (message.Length < 2) return BuildChatResponse("Please enter a valid name.", "Enter your full name", 20, "collect_name");
                 session.Name = ToTitleCase(message);
+                SaveChatLead(session, false);
                 session.Stage = "collect_phone";
-                return BuildChatResponse(AskPhone, "10-digit phone number", 40, "collect_phone");
+                return BuildChatResponse(AskPhone, "Enter your phone number", 50, "collect_phone");
             }
 
             if (session.Stage == "collect_phone")
             {
                 var phone = NormalizePhone(message);
-                if (!PhoneRegex.IsMatch(phone)) return BuildChatResponse("Please enter a valid 10-digit phone number.", "e.g. 9876543210", 40, "collect_phone");
+                if (!PhoneRegex.IsMatch(phone)) return BuildChatResponse("Please enter a valid 10-digit phone number.", "Enter your phone number", 50, "collect_phone");
                 session.Phone = phone;
+                SaveChatLead(session, false);
                 session.Stage = "collect_email";
-                return BuildChatResponse(AskEmail, "name@example.com", 60, "collect_email");
+                return BuildChatResponse(AskEmail, "Enter your email", 75, "collect_email");
             }
 
             if (session.Stage == "collect_email")
             {
                 var email = message.ToLowerInvariant();
-                if (!EmailRegex.IsMatch(email)) return BuildChatResponse("Please enter a valid email address.", "name@example.com", 60, "collect_email");
+                if (!EmailRegex.IsMatch(email)) return BuildChatResponse("Please enter a valid email address.", "Enter your email", 75, "collect_email");
                 session.Email = email;
+                SaveChatLead(session, false);
                 session.Stage = "collect_location";
-                return BuildChatResponse(AskLocation, "e.g. Hyderabad", 80, "collect_location");
+                return BuildChatResponse(AskLocation, "Enter your location", 90, "collect_location");
             }
 
             if (session.Stage == "collect_location")
             {
-                if (message.Length < 2) return BuildChatResponse("Please enter your current location.", "e.g. Hyderabad", 80, "collect_location");
+                if (message.Length < 2) return BuildChatResponse("Please enter your location.", "Enter your location", 90, "collect_location");
                 session.Location = ToTitleCase(message);
+                SaveChatLead(session, true);
                 session.Stage = "completed";
 
                 return Json(new
@@ -211,17 +268,7 @@ namespace Coepd.Web.Controllers
                     reply = FinalMessage,
                     options = new string[] { },
                     placeholder = "Type your message...",
-                    meta = new { progress = 100, stage = "completed" },
-                    lead_payload = new
-                    {
-                        name = session.Name ?? "",
-                        phone = session.Phone ?? "",
-                        email = session.Email ?? "",
-                        location = session.Location ?? "",
-                        interested_domain = "",
-                        whatsapp = "",
-                        source = "chatbot"
-                    }
+                    meta = new { progress = 100, stage = "completed" }
                 });
             }
 
@@ -246,7 +293,10 @@ namespace Coepd.Web.Controllers
             return normalized == "chatbot" ? "chatbot" : "webpage";
         }
 
-        private static string NormalizePhone(string value) => new string((value ?? "").Where(char.IsDigit).ToArray());
+        private static string NormalizePhone(string value)
+        {
+            return new string((value ?? "").Where(char.IsDigit).ToArray());
+        }
 
         private static string ToTitleCase(string value)
         {
@@ -255,9 +305,80 @@ namespace Coepd.Web.Controllers
             return CultureInfo.CurrentCulture.TextInfo.ToTitleCase(text);
         }
 
+        private void SaveChatLead(ChatSessionState session, bool finalize)
+        {
+            if (session == null) return;
+
+            var lead = new Lead
+            {
+                Id = session.LeadId,
+                Name = session.Name ?? string.Empty,
+                Phone = session.Phone ?? string.Empty,
+                Email = session.Email ?? string.Empty,
+                Location = session.Location ?? string.Empty,
+                InterestedDomain = string.Empty,
+                Whatsapp = string.Empty,
+                Source = finalize ? "chatbot" : "chatbot_draft",
+                CreatedAt = session.CreatedAt == default(DateTime) ? DateTime.UtcNow : session.CreatedAt
+            };
+
+            if (StorageMode.UseRuntimeStore())
+            {
+                if (lead.Id > 0 && RuntimeStore.UpdateLead(lead))
+                {
+                    session.CreatedAt = lead.CreatedAt;
+                    return;
+                }
+
+                session.LeadId = RuntimeStore.AddLead(lead);
+                session.CreatedAt = lead.CreatedAt;
+                return;
+            }
+
+            try
+            {
+                if (lead.Id > 0)
+                {
+                    var existing = _db.Leads.FirstOrDefault(x => x.Id == lead.Id);
+                    if (existing != null)
+                    {
+                        existing.Name = lead.Name;
+                        existing.Phone = lead.Phone;
+                        existing.Email = lead.Email;
+                        existing.Location = lead.Location;
+                        existing.InterestedDomain = lead.InterestedDomain;
+                        existing.Whatsapp = lead.Whatsapp;
+                        existing.Source = lead.Source;
+                        if (existing.CreatedAt == default(DateTime)) existing.CreatedAt = lead.CreatedAt;
+                        _db.SaveChanges();
+                        session.CreatedAt = existing.CreatedAt;
+                        return;
+                    }
+                }
+
+                _db.Leads.Add(lead);
+                _db.SaveChanges();
+                session.LeadId = lead.Id;
+                session.CreatedAt = lead.CreatedAt;
+            }
+            catch
+            {
+                if (lead.Id > 0 && RuntimeStore.UpdateLead(lead))
+                {
+                    session.CreatedAt = lead.CreatedAt;
+                    return;
+                }
+
+                session.LeadId = RuntimeStore.AddLead(lead);
+                session.CreatedAt = lead.CreatedAt;
+            }
+        }
+
         private sealed class ChatSessionState
         {
             public string Stage { get; set; } = "greeting";
+            public int LeadId { get; set; }
+            public DateTime CreatedAt { get; set; }
             public string Name { get; set; }
             public string Phone { get; set; }
             public string Email { get; set; }
