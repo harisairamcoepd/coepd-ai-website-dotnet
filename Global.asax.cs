@@ -10,6 +10,7 @@ namespace Coepd.Web
         protected void Application_Start()
         {
             RuntimeStore.Configure(HostingEnvironment.MapPath("~/"));
+            DbBootstrapper.EnsureInitialized();
             AreaRegistration.RegisterAllAreas();
             FilterConfig.RegisterGlobalFilters(GlobalFilters.Filters);
             RouteConfig.RegisterRoutes(RouteTable.Routes);
