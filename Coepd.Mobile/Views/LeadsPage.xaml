@@ -13,7 +13,7 @@
             <Frame Style="{StaticResource HeroFrame}">
                 <VerticalStackLayout Spacing="14">
                     <Grid ColumnDefinitions="*,Auto">
-                        <Label Text="Lead Explorer" TextColor="White" FontSize="24" FontAttributes="Bold" />
+                        <Label Text="Lead Explorer &#x1F50D;" TextColor="White" FontSize="24" FontAttributes="Bold" />
                         <Frame Grid.Column="1" Style="{StaticResource BadgeFrame}" BackgroundColor="#19FFFFFF">
                             <Label Text="LIVE" TextColor="White" FontSize="11" FontAttributes="Bold" />
                         </Frame>
@@ -27,7 +27,7 @@
                         <Frame Grid.Column="0" Style="{StaticResource InputFrame}" Padding="12,8">
                             <Entry Text="{Binding SearchQuery}" Placeholder="Search by name, phone, email" BackgroundColor="Transparent" />
                         </Frame>
-                        <Button Grid.Column="1" Text="Search" Command="{Binding SearchCommand}" Style="{StaticResource PrimaryButton}" HeightRequest="48" WidthRequest="110" />
+                        <Button Grid.Column="1" Text="Search &#x1F50E;" Command="{Binding SearchCommand}" Style="{StaticResource PrimaryButton}" HeightRequest="48" WidthRequest="120" />
                     </Grid>
                 </VerticalStackLayout>
             </Frame>
@@ -49,10 +49,10 @@
                 </CollectionView.ItemsLayout>
                 <CollectionView.EmptyView>
                     <VerticalStackLayout VerticalOptions="Center" HorizontalOptions="Center" Spacing="14">
-                        <Label Text="◌" FontSize="56" TextColor="#CBD5E1" HorizontalTextAlignment="Center" />
+                        <Label Text="&#x1F4ED;" FontSize="56" TextColor="#CBD5E1" HorizontalTextAlignment="Center" />
                         <Label Text="No leads yet" FontSize="22" FontAttributes="Bold" TextColor="#0B1C2C" HorizontalTextAlignment="Center" />
                         <Label Text="Leads will appear here when your live sources start syncing." FontSize="14" TextColor="#6B7280" HorizontalTextAlignment="Center" />
-                        <Button Text="Refresh" Command="{Binding RefreshCommand}" Style="{StaticResource OutlineButton}" WidthRequest="180" />
+                        <Button Text="Refresh &#x1F504;" Command="{Binding RefreshCommand}" Style="{StaticResource OutlineButton}" WidthRequest="180" />
                     </VerticalStackLayout>
                 </CollectionView.EmptyView>
                 <CollectionView.ItemTemplate>
@@ -86,20 +86,20 @@
                                         <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
                                             <Frame Grid.Column="0" Style="{StaticResource InputFrame}" Padding="12,10">
                                                 <HorizontalStackLayout Spacing="8">
-                                                    <Label Text="☎" TextColor="#3B82F6" />
+                                                    <Label Text="&#x260E;" TextColor="#3B82F6" />
                                                     <Label Text="{Binding Phone}" TextColor="#0B1C2C" FontSize="13" />
                                                 </HorizontalStackLayout>
                                             </Frame>
                                             <Frame Grid.Column="1" Style="{StaticResource InputFrame}" Padding="12,10">
                                                 <HorizontalStackLayout Spacing="8">
-                                                    <Label Text="📍" TextColor="#3B82F6" />
+                                                    <Label Text="&#x1F4CD;" TextColor="#3B82F6" />
                                                     <Label Text="{Binding Location}" TextColor="#0B1C2C" FontSize="13" />
                                                 </HorizontalStackLayout>
                                             </Frame>
                                         </Grid>
                                         <Frame Style="{StaticResource InputFrame}" Padding="12,10">
                                             <HorizontalStackLayout Spacing="8">
-                                                <Label Text="✉" TextColor="#3B82F6" />
+                                                <Label Text="&#x2709;" TextColor="#3B82F6" />
                                                 <Label Text="{Binding Email}" TextColor="#0B1C2C" FontSize="13" />
                                             </HorizontalStackLayout>
                                         </Frame>
