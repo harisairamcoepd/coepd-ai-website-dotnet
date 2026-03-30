@@ -31,6 +31,7 @@ namespace Coepd.Web.Infrastructure
                 }
 
                 var logPath = Path.Combine(root, "diagnostics.log");
+                RotateIfNeeded(logPath);
                 var line = string.Format(
                     "{0:u} [{1}] [{2}] {3}{4}",
                     DateTime.UtcNow,
@@ -43,6 +44,24 @@ namespace Coepd.Web.Infrastructure
                 {
                     File.AppendAllText(logPath, line + Environment.NewLine);
                 }
+            }
+            catch
+            {
+            }
+        }
+
+        private static void RotateIfNeeded(string logPath)
+        {
+            try
+            {
+                var file = new FileInfo(logPath);
+                if (!file.Exists || file.Length < 5 * 1024 * 1024)
+                {
+                    return;
+                }
+
+                var archivedPath = Path.Combine(file.DirectoryName ?? string.Empty, "diagnostics_" + DateTime.UtcNow.ToString("yyyyMMddHHmmss") + ".log");
+                File.Move(logPath, archivedPath);
             }
             catch
             {

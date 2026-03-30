@@ -73,7 +73,7 @@
                             StrokeThickness="0"
                             StrokeShape="RoundRectangle 22">
                         <VerticalStackLayout Spacing="4">
-                            <Label Text="Fast Login"
+                            <Label Text="Secure Access"
                                    FontSize="14"
                                    FontAttributes="Bold"
                                    TextColor="White" />

@@ -3,16 +3,22 @@ using Coepd.Web.Infrastructure;
 using Coepd.Web.Models;
 using Newtonsoft.Json;
 using System;
+using System.Collections.Concurrent;
 using System.Configuration;
+using System.Globalization;
 using System.Linq;
 using System.Web;
 using System.Web.Mvc;
+using System.Data.Entity;
 
 namespace Coepd.Web.Controllers
 {
     public class AuthController : Controller
     {
         private readonly CoepdDbContext _db = new CoepdDbContext();
+        private static readonly ConcurrentDictionary<string, FailedAuthState> FailedAuth = new ConcurrentDictionary<string, FailedAuthState>();
+        private const int MaxFailedAttempts = 8;
+        private static readonly TimeSpan FailedAttemptWindow = TimeSpan.FromMinutes(10);
 
         [HttpGet]
         public ActionResult Staff()
@@ -105,13 +111,25 @@ namespace Coepd.Web.Controllers
 
         private Staff AuthenticateUser(string email, string password, string requiredRole)
         {
-            var normalizedEmail = (email ?? string.Empty).Trim().ToLowerInvariant();
-            var adminEmail = (ConfigurationManager.AppSettings["ADMIN_LOGIN_EMAIL"] ?? "admin").Trim().ToLowerInvariant();
-            var adminPassword = (ConfigurationManager.AppSettings["ADMIN_LOGIN_PASSWORD"] ?? "admin").Trim();
+            var clientKey = BuildClientKey();
+            if (IsRateLimited(clientKey))
+            {
+                return null;
+            }
 
-            if (normalizedEmail == adminEmail && (password ?? string.Empty) == adminPassword)
+            var normalizedEmail = (email ?? string.Empty).Trim().ToLowerInvariant();
+            var adminEmail = GetAppSettingOrEnv("ADMIN_LOGIN_EMAIL", "__SET_IN_ENV__").Trim().ToLowerInvariant();
+            var adminPassword = GetAppSettingOrEnv("ADMIN_LOGIN_PASSWORD", "__SET_IN_ENV__").Trim();
+
+            if (normalizedEmail == adminEmail &&
+                !string.IsNullOrWhiteSpace(adminEmail) &&
+                !string.IsNullOrWhiteSpace(adminPassword) &&
+                adminEmail != "__set_in_env__" &&
+                adminPassword != "__SET_IN_ENV__" &&
+                (password ?? string.Empty) == adminPassword)
             {
                 if (!string.IsNullOrWhiteSpace(requiredRole) && requiredRole != "admin") return null;
+                ClearFailedAttempts(clientKey);
                 return new Staff { Id = 0, Name = "Admin", Email = adminEmail, Role = "admin", Status = "active" };
             }
 
@@ -122,15 +140,25 @@ namespace Coepd.Web.Controllers
 
             try
             {
-                var staff = _db.Staff.FirstOrDefault(x => x.Email.ToLower() == normalizedEmail);
+                var staff = _db.Staff.AsNoTracking().FirstOrDefault(x => x.Email.ToLower() == normalizedEmail);
                 if (staff == null || (staff.Status ?? "").ToLower() != "active") return null;
                 if (!BCrypt.Net.BCrypt.Verify(password ?? string.Empty, staff.PasswordHash ?? string.Empty)) return null;
                 if (!string.IsNullOrWhiteSpace(requiredRole) && !string.Equals(staff.Role, requiredRole, StringComparison.OrdinalIgnoreCase)) return null;
+                ClearFailedAttempts(clientKey);
                 return staff;
             }
             catch
             {
-                return AuthenticateFromRuntimeStore(normalizedEmail, password, requiredRole);
+                var fallback = AuthenticateFromRuntimeStore(normalizedEmail, password, requiredRole);
+                if (fallback == null)
+                {
+                    RegisterFailedAttempt(clientKey);
+                }
+                else
+                {
+                    ClearFailedAttempts(clientKey);
+                }
+                return fallback;
             }
         }
 
@@ -141,6 +169,63 @@ namespace Coepd.Web.Controllers
             if (!BCrypt.Net.BCrypt.Verify(password ?? string.Empty, staff.PasswordHash ?? string.Empty)) return null;
             if (!string.IsNullOrWhiteSpace(requiredRole) && !string.Equals(staff.Role, requiredRole, StringComparison.OrdinalIgnoreCase)) return null;
             return staff;
+        }
+
+        private string BuildClientKey()
+        {
+            var ip = Request?.UserHostAddress ?? "unknown";
+            return ip + "|" + DateTime.UtcNow.ToString("yyyyMMddHH", CultureInfo.InvariantCulture);
+        }
+
+        private static bool IsRateLimited(string clientKey)
+        {
+            var now = DateTime.UtcNow;
+            if (!FailedAuth.TryGetValue(clientKey, out var state))
+            {
+                return false;
+            }
+
+            if (now - state.FirstAttemptUtc > FailedAttemptWindow)
+            {
+                FailedAuth.TryRemove(clientKey, out _);
+                return false;
+            }
+
+            return state.Count >= MaxFailedAttempts;
+        }
+
+        private static void RegisterFailedAttempt(string clientKey)
+        {
+            FailedAuth.AddOrUpdate(
+                clientKey,
+                _ => new FailedAuthState { Count = 1, FirstAttemptUtc = DateTime.UtcNow },
+                (_, existing) =>
+                {
+                    if (DateTime.UtcNow - existing.FirstAttemptUtc > FailedAttemptWindow)
+                    {
+                        return new FailedAuthState { Count = 1, FirstAttemptUtc = DateTime.UtcNow };
+                    }
+
+                    existing.Count += 1;
+                    return existing;
+                });
+        }
+
+        private static void ClearFailedAttempts(string clientKey)
+        {
+            FailedAuth.TryRemove(clientKey, out _);
+        }
+
+        private static string GetAppSettingOrEnv(string key, string fallback)
+        {
+            var env = Environment.GetEnvironmentVariable(key);
+            if (!string.IsNullOrWhiteSpace(env))
+            {
+                return env;
+            }
+
+            var appSetting = ConfigurationManager.AppSettings[key];
+            return string.IsNullOrWhiteSpace(appSetting) ? fallback : appSetting;
         }
 
         private void SetSession(Staff user)
@@ -165,6 +250,22 @@ namespace Coepd.Web.Controllers
             html = html.Replace("{{ error or '' }}", HttpUtility.HtmlEncode(error ?? string.Empty));
             html = html.Replace("/static/", "/Content/static/");
             return Content(html, "text/html");
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                _db.Dispose();
+            }
+
+            base.Dispose(disposing);
+        }
+
+        private sealed class FailedAuthState
+        {
+            public int Count { get; set; }
+            public DateTime FirstAttemptUtc { get; set; }
         }
     }
 }

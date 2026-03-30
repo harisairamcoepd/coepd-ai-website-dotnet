@@ -21,20 +21,16 @@ public class AuthService
     {
         var role = (user.Role ?? "staff").Trim().ToLowerInvariant();
         var endpoint = role == "admin" ? "api/admin/login" : "api/staff/login";
+        var normalizedEmail = (user.Email ?? string.Empty).Trim();
+        var response = await PostLoginWithRetryAsync(endpoint, normalizedEmail, user.Password ?? string.Empty, cancellationToken);
 
-        var response = await _session.Client.PostAsJsonAsync(endpoint, new LoginRequest
-        {
-            Email = user.Email.Trim(),
-            Password = user.Password
-        }, cancellationToken);
-
-        var payload = await response.Content.ReadFromJsonAsync<LoginResponse>(_session.JsonOptions, cancellationToken);
+        var payload = await TryReadLoginResponseAsync(response, cancellationToken);
         if (!response.IsSuccessStatusCode)
         {
             return new LoginResponse
             {
                 Success = false,
-                Error = payload?.Error ?? "Login failed. Check credentials and server URL."
+                Error = payload?.Error ?? $"Login failed ({(int)response.StatusCode}). Check credentials and server URL."
             };
         }
 
@@ -43,8 +39,8 @@ public class AuthService
         {
             var confirmedRole = await ConfirmSessionRoleAsync(cancellationToken) ?? (string.IsNullOrWhiteSpace(result.Role) ? role : result.Role);
             _session.CurrentRole = confirmedRole;
-            _session.CurrentEmail = user.Email.Trim();
-            await SaveCredentialsAsync(user.Email.Trim(), user.Password);
+            _session.CurrentEmail = normalizedEmail;
+            await SaveCredentialsAsync(normalizedEmail, user.Password ?? string.Empty);
             Preferences.Default.Set(SessionPersistedKey, true);
             await _leadMonitorService.StartAsync();
         }
@@ -128,6 +124,57 @@ public class AuthService
             }
 
             return roleElement.GetString();
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private async Task<HttpResponseMessage> PostLoginWithRetryAsync(
+        string endpoint,
+        string email,
+        string password,
+        CancellationToken cancellationToken)
+    {
+        for (var attempt = 1; attempt <= 3; attempt++)
+        {
+            try
+            {
+                var response = await _session.Client.PostAsJsonAsync(endpoint, new LoginRequest
+                {
+                    Email = email,
+                    Password = password
+                }, cancellationToken);
+
+                if ((int)response.StatusCode >= 500 && attempt < 3)
+                {
+                    await Task.Delay(TimeSpan.FromMilliseconds(250 * attempt), cancellationToken);
+                    continue;
+                }
+
+                return response;
+            }
+            catch when (attempt < 3)
+            {
+                await Task.Delay(TimeSpan.FromMilliseconds(250 * attempt), cancellationToken);
+            }
+        }
+
+        throw new InvalidOperationException("Unable to connect to login service.");
+    }
+
+    private async Task<LoginResponse?> TryReadLoginResponseAsync(HttpResponseMessage response, CancellationToken cancellationToken)
+    {
+        var contentType = response.Content.Headers.ContentType?.MediaType ?? string.Empty;
+        if (!contentType.Contains("json", StringComparison.OrdinalIgnoreCase))
+        {
+            return null;
+        }
+
+        try
+        {
+            return await response.Content.ReadFromJsonAsync<LoginResponse>(_session.JsonOptions, cancellationToken);
         }
         catch
         {

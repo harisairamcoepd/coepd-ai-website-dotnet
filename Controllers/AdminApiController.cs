@@ -5,6 +5,7 @@ using Newtonsoft.Json;
 using System;
 using System.Globalization;
 using System.Linq;
+using System.Data.Entity;
 using System.Text;
 using System.Web.Mvc;
 
@@ -16,8 +17,11 @@ namespace Coepd.Web.Controllers
 
         [HttpGet]
         [RoleAuthorize("admin", "staff")]
-        public ActionResult Leads(string date = null, string source = null, string search = null)
+        public ActionResult Leads(string date = null, string source = null, string search = null, int page = 1, int pageSize = 200)
         {
+            page = page < 1 ? 1 : page;
+            pageSize = pageSize < 1 ? 200 : (pageSize > 1000 ? 1000 : pageSize);
+
             if (StorageMode.UseRuntimeStore())
             {
                 var list = RuntimeStore.GetLeads().Where(x => !string.Equals(x.Source, "chatbot_draft", StringComparison.OrdinalIgnoreCase)).AsQueryable();
@@ -48,7 +52,8 @@ namespace Coepd.Web.Controllers
 
                 var runtimeLeads = list
                     .OrderByDescending(x => x.CreatedAt)
-                    .Take(2000)
+                    .Skip((page - 1) * pageSize)
+                    .Take(pageSize)
                     .Select(x => new
                     {
                         id = x.Id,
@@ -63,13 +68,13 @@ namespace Coepd.Web.Controllers
                     .ToList();
 
                 DiagnosticLogger.Info("AdminApi.Leads", "Runtime store returned " + runtimeLeads.Count.ToString(CultureInfo.InvariantCulture) + " leads.");
-                return Json(new { leads = runtimeLeads }, JsonRequestBehavior.AllowGet);
+                return Json(new { leads = runtimeLeads, page, page_size = pageSize }, JsonRequestBehavior.AllowGet);
             }
 
             try
             {
                 DiagnosticLogger.Info("AdminApi.Leads", "Fetching admin leads from SQL.");
-                var query = _db.Leads.Where(x => x.Source != "chatbot_draft").AsQueryable();
+                var query = _db.Leads.AsNoTracking().Where(x => x.Source != "chatbot_draft").AsQueryable();
 
             if (!string.IsNullOrWhiteSpace(date) && DateTime.TryParse(date, out var d))
             {
@@ -97,7 +102,8 @@ namespace Coepd.Web.Controllers
 
                 var leadRows = query
                     .OrderByDescending(x => x.CreatedAt)
-                    .Take(2000)
+                    .Skip((page - 1) * pageSize)
+                    .Take(pageSize)
                     .ToList();
 
                 var leads = leadRows
@@ -115,7 +121,7 @@ namespace Coepd.Web.Controllers
                     .ToList();
 
                 DiagnosticLogger.Info("AdminApi.Leads", "SQL returned " + leads.Count.ToString(CultureInfo.InvariantCulture) + " leads.");
-                return Json(new { leads }, JsonRequestBehavior.AllowGet);
+                return Json(new { leads, page, page_size = pageSize }, JsonRequestBehavior.AllowGet);
             }
             catch (Exception ex)
             {
@@ -148,7 +154,8 @@ namespace Coepd.Web.Controllers
 
                 var leads = list
                     .OrderByDescending(x => x.CreatedAt)
-                    .Take(2000)
+                    .Skip((page - 1) * pageSize)
+                    .Take(pageSize)
                     .Select(x => new
                     {
                         id = x.Id,
@@ -163,7 +170,7 @@ namespace Coepd.Web.Controllers
                     .ToList();
 
                 DiagnosticLogger.Error("AdminApi.Leads", "SQL fetch failed. Falling back to runtime store with " + leads.Count.ToString(CultureInfo.InvariantCulture) + " leads.", ex);
-                return Json(new { leads }, JsonRequestBehavior.AllowGet);
+                return Json(new { leads, page, page_size = pageSize }, JsonRequestBehavior.AllowGet);
             }
         }
 
@@ -494,6 +501,7 @@ namespace Coepd.Web.Controllers
             {
                 DiagnosticLogger.Info("AdminApi.Staff", "Fetching staff records from SQL.");
                 var staffRows = _db.Staff
+                    .AsNoTracking()
                     .OrderByDescending(x => x.CreatedAt)
                     .ToList();
 
@@ -753,6 +761,16 @@ namespace Coepd.Web.Controllers
         {
             var s = (value ?? string.Empty).Replace("\"", "\"\"");
             return "\"" + s + "\"";
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                _db.Dispose();
+            }
+
+            base.Dispose(disposing);
         }
     }
 }

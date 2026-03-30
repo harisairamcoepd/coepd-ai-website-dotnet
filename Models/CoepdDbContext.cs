@@ -1,10 +1,15 @@
-﻿using System.Data.Entity;
+using System;
+using System.Configuration;
+using System.Data.Entity;
 
 namespace Coepd.Web.Models
 {
     public class CoepdDbContext : DbContext
     {
-        public CoepdDbContext() : base("CoepdDb") { }
+        public CoepdDbContext() : base(ResolveConnectionString())
+        {
+            Database.CommandTimeout = 30;
+        }
 
         public DbSet<Lead> Leads { get; set; }
         public DbSet<Staff> Staff { get; set; }
@@ -18,6 +23,18 @@ namespace Coepd.Web.Models
             modelBuilder.Entity<Staff>().Property(x => x.PasswordHash).HasColumnName("password_hash");
             modelBuilder.Entity<Staff>().Property(x => x.CreatedAt).HasColumnName("created_at");
             base.OnModelCreating(modelBuilder);
+        }
+
+        private static string ResolveConnectionString()
+        {
+            var envConnection = Environment.GetEnvironmentVariable("COEPD_DB_CONNECTION");
+            if (!string.IsNullOrWhiteSpace(envConnection))
+            {
+                return envConnection;
+            }
+
+            var configured = ConfigurationManager.ConnectionStrings["CoepdDb"]?.ConnectionString;
+            return string.IsNullOrWhiteSpace(configured) ? "CoepdDb" : configured;
         }
     }
 }

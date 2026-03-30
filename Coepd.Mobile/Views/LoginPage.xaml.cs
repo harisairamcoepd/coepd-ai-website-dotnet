@@ -20,6 +20,7 @@ public partial class LoginPage : ContentPage
     public void ConfigureRole(string role)
     {
         _viewModel.Role = role;
+        _viewModel.ConfigureDefaultsForRole(role);
     }
 
     protected override void OnAppearing()

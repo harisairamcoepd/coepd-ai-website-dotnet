@@ -8,22 +8,19 @@ public partial class SplashPage : ContentPage
     private readonly AuthService _authService;
     private readonly IServiceProvider _serviceProvider;
     private readonly RoleSelectionPage _roleSelectionPage;
-    private readonly NotificationService _notificationService;
     private bool _navigated;
 
     public SplashPage(
         ApiSession session,
         AuthService authService,
         IServiceProvider serviceProvider,
-        RoleSelectionPage roleSelectionPage,
-        NotificationService notificationService)
+        RoleSelectionPage roleSelectionPage)
     {
         InitializeComponent();
         _session = session;
         _authService = authService;
         _serviceProvider = serviceProvider;
         _roleSelectionPage = roleSelectionPage;
-        _notificationService = notificationService;
     }
 
     protected override async void OnAppearing()
@@ -34,7 +31,6 @@ public partial class SplashPage : ContentPage
         await Task.WhenAll(
             SplashContent.FadeTo(1, 350, Easing.CubicOut),
             SplashContent.ScaleTo(1, 350, Easing.CubicOut));
-        await _notificationService.EnsurePermissionAsync();
         if (_navigated) return;
         _navigated = true;
         await Task.Delay(1400);

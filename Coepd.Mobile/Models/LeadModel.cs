@@ -13,6 +13,8 @@ public class LeadModel
     public string Phone { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
     public string Location { get; set; } = string.Empty;
+    public string Domain { get; set; } = string.Empty;
+    public bool WhatsAppConsent { get; set; }
     public LeadSource Source { get; set; }
     public DateTime CreatedAt { get; set; }
 
@@ -34,6 +36,7 @@ public class LeadModel
 
     public string SourceLabel => Source == LeadSource.Chatbot ? "CHATBOT" : "WEBSITE";
     public string TimestampText => CreatedAt.ToLocalTime().ToString("dd MMM yyyy, hh:mm tt");
+    public string ConsentLabel => WhatsAppConsent ? "WhatsApp: Yes" : "WhatsApp: No";
     public Color SourceColor => Source == LeadSource.Chatbot
         ? Color.FromArgb("#14B8A6")
         : Color.FromArgb("#3B82F6");

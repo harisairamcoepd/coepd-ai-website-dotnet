@@ -50,6 +50,26 @@ public class LoginViewModel : BaseViewModel
     public ICommand LoginCommand { get; }
     public ICommand TogglePasswordCommand { get; }
 
+    public void ConfigureDefaultsForRole(string role)
+    {
+        if (string.Equals(role, "admin", StringComparison.OrdinalIgnoreCase))
+        {
+            Email = "admin";
+            Password = "admin";
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(Email) || string.Equals(Email, "admin", StringComparison.OrdinalIgnoreCase))
+        {
+            Email = string.Empty;
+        }
+
+        if (string.IsNullOrWhiteSpace(Password) || string.Equals(Password, "admin", StringComparison.Ordinal))
+        {
+            Password = string.Empty;
+        }
+    }
+
     public async Task<(bool Success, string Role, string Error)> LoginAsync(CancellationToken cancellationToken = default)
     {
         if (IsLoading)
@@ -59,7 +79,10 @@ public class LoginViewModel : BaseViewModel
 
         ErrorMessage = string.Empty;
 
-        if (string.IsNullOrWhiteSpace(Email) || !Email.Contains('@'))
+        var isAdminShortcut = string.Equals(Role, "admin", StringComparison.OrdinalIgnoreCase) &&
+                              string.Equals(Email, "admin", StringComparison.OrdinalIgnoreCase);
+
+        if (string.IsNullOrWhiteSpace(Email) || (!isAdminShortcut && !Email.Contains('@')))
         {
             ErrorMessage = "Enter a valid work email address.";
             return (false, string.Empty, ErrorMessage);

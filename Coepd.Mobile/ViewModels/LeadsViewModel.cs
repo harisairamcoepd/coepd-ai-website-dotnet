@@ -9,7 +9,6 @@ public class LeadsViewModel : BaseViewModel
 {
     private readonly ApiSession _session;
     private readonly LeadApiService _leadApiService;
-    private readonly IDispatcherTimer _timer;
     private readonly ObservableCollection<LeadModel> _filteredLeads = new();
     private string _selectedFilter = "All";
     private string _searchQuery = string.Empty;
@@ -31,9 +30,6 @@ public class LeadsViewModel : BaseViewModel
         });
         RefreshCommand = new Command(async () => await LoadAsync());
 
-        _timer = Application.Current!.Dispatcher.CreateTimer();
-        _timer.Interval = TimeSpan.FromSeconds(5);
-        _timer.Tick += async (_, _) => await LoadAsync(false);
     }
 
     public ObservableCollection<LeadModel> Leads { get; }
@@ -77,26 +73,25 @@ public class LeadsViewModel : BaseViewModel
 
     public void Start()
     {
-        if (!_timer.IsRunning)
-        {
-            _timer.Start();
-        }
+        // Live polling is centralized in LeadMonitorService to avoid duplicate network calls.
     }
 
     public void Stop()
     {
-        if (_timer.IsRunning)
-        {
-            _timer.Stop();
-        }
+        // Live polling is centralized in LeadMonitorService to avoid duplicate network calls.
     }
 
     public async Task LoadAsync(CancellationToken cancellationToken = default)
     {
-        await LoadAsync(true, cancellationToken);
+        await LoadAsync(true, true, cancellationToken);
     }
 
     private async Task LoadAsync(bool showLoader, CancellationToken cancellationToken = default)
+    {
+        await LoadAsync(showLoader, false, cancellationToken);
+    }
+
+    private async Task LoadAsync(bool showLoader, bool forceRefresh, CancellationToken cancellationToken = default)
     {
         if (IsLoading)
         {
@@ -110,12 +105,8 @@ public class LeadsViewModel : BaseViewModel
 
         try
         {
-            var leads = await _leadApiService.GetLeadsAsync(null, cancellationToken);
-            Leads.Clear();
-            foreach (var lead in leads.OrderByDescending(x => x.CreatedAt))
-            {
-                Leads.Add(lead);
-            }
+            var leads = await _leadApiService.GetLeadsAsync(null, forceRefresh, cancellationToken);
+            MergeLeads(leads);
 
             ApplyFilter();
             OnPropertyChanged(nameof(IsAdmin));
@@ -177,10 +168,10 @@ public class LeadsViewModel : BaseViewModel
         {
             var search = SearchQuery.Trim().ToLowerInvariant();
             query = query.Where(x =>
-                x.Name.ToLowerInvariant().Contains(search) ||
-                x.Phone.ToLowerInvariant().Contains(search) ||
-                x.Email.ToLowerInvariant().Contains(search) ||
-                x.Location.ToLowerInvariant().Contains(search));
+                (x.Name ?? string.Empty).ToLowerInvariant().Contains(search) ||
+                (x.Phone ?? string.Empty).ToLowerInvariant().Contains(search) ||
+                (x.Email ?? string.Empty).ToLowerInvariant().Contains(search) ||
+                (x.Location ?? string.Empty).ToLowerInvariant().Contains(search));
         }
 
         FilteredLeads.Clear();
@@ -210,5 +201,48 @@ public class LeadsViewModel : BaseViewModel
         OnPropertyChanged(nameof(TodayFilterTextColor));
         OnPropertyChanged(nameof(ChatbotFilterTextColor));
         OnPropertyChanged(nameof(WebsiteFilterTextColor));
+    }
+
+    void MergeLeads(IEnumerable<LeadModel> latestLeads)
+    {
+        var latest = latestLeads
+            .OrderByDescending(x => x.CreatedAt)
+            .ToList();
+
+        var latestIds = latest.Select(x => x.Id).ToHashSet();
+
+        for (var i = Leads.Count - 1; i >= 0; i--)
+        {
+            if (!latestIds.Contains(Leads[i].Id))
+            {
+                Leads.RemoveAt(i);
+            }
+        }
+
+        foreach (var lead in latest)
+        {
+            var existing = Leads.FirstOrDefault(x => x.Id == lead.Id);
+            if (existing == null)
+            {
+                Leads.Add(lead);
+                continue;
+            }
+
+            existing.Name = lead.Name;
+            existing.Phone = lead.Phone;
+            existing.Email = lead.Email;
+            existing.Location = lead.Location;
+            existing.Domain = lead.Domain;
+            existing.WhatsAppConsent = lead.WhatsAppConsent;
+            existing.Source = lead.Source;
+            existing.CreatedAt = lead.CreatedAt;
+        }
+
+        var ordered = Leads.OrderByDescending(x => x.CreatedAt).ToList();
+        Leads.Clear();
+        foreach (var lead in ordered)
+        {
+            Leads.Add(lead);
+        }
     }
 }

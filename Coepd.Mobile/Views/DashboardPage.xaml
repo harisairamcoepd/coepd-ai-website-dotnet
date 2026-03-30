@@ -4,7 +4,7 @@
              xmlns:viewModels="clr-namespace:Coepd.Mobile.ViewModels"
              x:Class="Coepd.Mobile.Views.DashboardPage"
              x:DataType="viewModels:DashboardViewModel"
-             BackgroundColor="#F5F7FB"
+             BackgroundColor="{DynamicResource BackgroundColor}"
              Shell.NavBarIsVisible="False">
     <RefreshView Command="{Binding RefreshCommand}" IsRefreshing="{Binding IsLoading}">
         <ScrollView>
@@ -12,7 +12,7 @@
                 <Frame Style="{StaticResource HeroFrame}">
                     <VerticalStackLayout Spacing="14">
                         <Grid ColumnDefinitions="*,Auto,Auto">
-                            <Label Text="COEPD Dashboard &#x2728;" TextColor="White" FontSize="24" FontAttributes="Bold" />
+                            <Label Text="COEPD Dashboard" TextColor="White" FontSize="24" FontAttributes="Bold" />
                             <HorizontalStackLayout Grid.Column="1" Spacing="8" VerticalOptions="Center">
                                 <Ellipse x:Name="LiveDot" WidthRequest="8" HeightRequest="8" Fill="#22C55E" />
                                 <Label Text="LIVE" TextColor="#D1FAE5" FontSize="12" FontAttributes="Bold" />
@@ -42,7 +42,7 @@
                     <Frame Grid.Row="0" Grid.Column="0" Style="{StaticResource CardFrame}" BackgroundColor="#F8FBFF">
                         <VerticalStackLayout Spacing="12">
                             <Border StrokeThickness="0" StrokeShape="RoundRectangle 2" HeightRequest="3" BackgroundColor="#0B1C2C" />
-                            <Label Text="&#x1F4CA;" FontSize="22" />
+                            <Label Text="Overview" FontSize="12" TextColor="#6B7280" FontAttributes="Bold" />
                             <Label Text="{Binding TotalLeads}" Style="{StaticResource StatValue}" TextColor="#0B1C2C" />
                             <Label Text="TOTAL LEADS" FontSize="11" TextColor="#6B7280" FontAttributes="Bold" />
                             <Label Text="All live inbound records" FontSize="11" TextColor="#6B7280" />
@@ -52,7 +52,7 @@
                     <Frame Grid.Row="0" Grid.Column="1" Style="{StaticResource CardFrame}" BackgroundColor="#EEF5FF">
                         <VerticalStackLayout Spacing="12">
                             <Border StrokeThickness="0" StrokeShape="RoundRectangle 2" HeightRequest="3" BackgroundColor="#3B82F6" />
-                            <Label Text="&#x26A1;" FontSize="22" />
+                            <Label Text="Today" FontSize="12" TextColor="#6B7280" FontAttributes="Bold" />
                             <Label Text="{Binding TodayLeads}" Style="{StaticResource StatValue}" TextColor="#3B82F6" />
                             <Label Text="TODAY" FontSize="11" TextColor="#6B7280" FontAttributes="Bold" />
                             <Label Text="Fresh leads since midnight" FontSize="11" TextColor="#6B7280" />
@@ -62,7 +62,7 @@
                     <Frame Grid.Row="1" Grid.Column="0" Style="{StaticResource CardFrame}" BackgroundColor="#ECFDF8">
                         <VerticalStackLayout Spacing="12">
                             <Border StrokeThickness="0" StrokeShape="RoundRectangle 2" HeightRequest="3" BackgroundColor="#14B8A6" />
-                            <Label Text="&#x1F916;" FontSize="22" />
+                            <Label Text="Chatbot" FontSize="12" TextColor="#6B7280" FontAttributes="Bold" />
                             <Label Text="{Binding ChatbotLeads}" Style="{StaticResource StatValue}" TextColor="#14B8A6" />
                             <Label Text="CHATBOT" FontSize="11" TextColor="#6B7280" FontAttributes="Bold" />
                             <Label Text="Assistant-generated leads" FontSize="11" TextColor="#6B7280" />
@@ -72,7 +72,7 @@
                     <Frame Grid.Row="1" Grid.Column="1" Style="{StaticResource CardFrame}" BackgroundColor="#FFF9EC">
                         <VerticalStackLayout Spacing="12">
                             <Border StrokeThickness="0" StrokeShape="RoundRectangle 2" HeightRequest="3" BackgroundColor="#F59E0B" />
-                            <Label Text="&#x1F310;" FontSize="22" />
+                            <Label Text="Website" FontSize="12" TextColor="#6B7280" FontAttributes="Bold" />
                             <Label Text="{Binding WebsiteLeads}" Style="{StaticResource StatValue}" TextColor="#F59E0B" />
                             <Label Text="WEBSITE" FontSize="11" TextColor="#6B7280" FontAttributes="Bold" />
                             <Label Text="Direct website conversions" FontSize="11" TextColor="#6B7280" />
@@ -87,8 +87,8 @@
                             <Label Text="Quick Actions" Style="{StaticResource SectionTitle}" FontSize="20" />
                             <Label Text="Open lead operations or pull a fresh live sync." Style="{StaticResource MutedLabel}" />
                         </VerticalStackLayout>
-                        <Button Text="Open Lead Explorer &#x1F50E;" Style="{StaticResource PrimaryButton}" Command="{Binding OpenLeadsCommand}" />
-                        <Button Text="Refresh Dashboard &#x1F504;" Style="{StaticResource OutlineButton}" Command="{Binding RefreshCommand}" />
+                        <Button Text="Open Lead Explorer" Style="{StaticResource PrimaryButton}" Command="{Binding OpenLeadsCommand}" />
+                        <Button Text="Refresh Dashboard" Style="{StaticResource OutlineButton}" Command="{Binding RefreshCommand}" />
                     </VerticalStackLayout>
                 </Frame>
 

@@ -22,6 +22,18 @@ namespace Coepd.Web.Infrastructure
 
         protected override void HandleUnauthorizedRequest(AuthorizationContext filterContext)
         {
+            var path = filterContext?.HttpContext?.Request?.Path ?? string.Empty;
+            if (path.StartsWith("/api/", StringComparison.OrdinalIgnoreCase))
+            {
+                filterContext.Result = new JsonResult
+                {
+                    Data = new { success = false, error = "Unauthorized" },
+                    JsonRequestBehavior = JsonRequestBehavior.AllowGet
+                };
+                filterContext.HttpContext.Response.StatusCode = 401;
+                return;
+            }
+
             filterContext.Result = new RedirectResult("/Auth/Staff");
         }
     }

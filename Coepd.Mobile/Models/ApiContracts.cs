@@ -46,6 +46,12 @@ public sealed class LeadDto
     [JsonPropertyName("location")]
     public string Location { get; set; } = string.Empty;
 
+    [JsonPropertyName("domain")]
+    public string Domain { get; set; } = string.Empty;
+
+    [JsonPropertyName("whatsapp_consent")]
+    public bool? WhatsappConsent { get; set; }
+
     [JsonPropertyName("source")]
     public string Source { get; set; } = string.Empty;
 

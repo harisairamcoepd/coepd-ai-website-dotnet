@@ -123,7 +123,7 @@
                                    FontSize="22"
                                    FontAttributes="Bold"
                                    TextColor="{StaticResource AppTextPrimary}" />
-                            <Label Text="Fast search, read-only lead review, and live refresh for mobile teams."
+                            <Label Text="Smart search, read-only lead review, and live refresh for mobile teams."
                                    FontSize="14"
                                    TextColor="{StaticResource AppTextSecondary}" />
                         </VerticalStackLayout>
