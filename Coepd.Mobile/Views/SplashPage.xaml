@@ -3,31 +3,129 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="Coepd.Mobile.Views.SplashPage"
              NavigationPage.HasNavigationBar="False"
-             BackgroundColor="#071124">
-    <Grid>
-        <VerticalStackLayout Spacing="18" VerticalOptions="Center" HorizontalOptions="Center">
-            <Border Padding="24"
-                    Background="#0E7490"
-                    StrokeThickness="0"
-                    StrokeShape="RoundRectangle 32">
-                <Label Text="COEPD"
-                       FontSize="32"
-                       FontAttributes="Bold"
-                       TextColor="White"
-                       HorizontalTextAlignment="Center" />
-            </Border>
-            <Label Text="Lead Command Center"
-                   FontSize="24"
-                   FontAttributes="Bold"
-                   TextColor="White"
-                   HorizontalTextAlignment="Center" />
-            <Label Text="Secure mobile access for admin and staff teams."
-                   FontSize="14"
-                   TextColor="#C7D2FE"
-                   HorizontalTextAlignment="Center" />
-            <ActivityIndicator IsRunning="True"
-                               Color="#22C55E"
-                               Margin="0,12,0,0" />
-        </VerticalStackLayout>
+             BackgroundColor="{StaticResource AppHeroBackground}">
+    <Grid x:Name="SplashRoot"
+          RowDefinitions="*,Auto,*">
+        <BoxView Opacity="0.18"
+                 Color="{StaticResource AppAccentBlue}"
+                 CornerRadius="180"
+                 WidthRequest="260"
+                 HeightRequest="260"
+                 HorizontalOptions="End"
+                 VerticalOptions="Start"
+                 Margin="0,-70,-90,0" />
+        <BoxView Opacity="0.12"
+                 Color="{StaticResource AppAccentSlate}"
+                 CornerRadius="170"
+                 WidthRequest="240"
+                 HeightRequest="240"
+                 HorizontalOptions="Start"
+                 VerticalOptions="End"
+                 Margin="-80,0,0,-70" />
+
+        <ScrollView Grid.RowSpan="3">
+            <VerticalStackLayout x:Name="SplashContent"
+                                 Padding="24,56,24,34"
+                                 Spacing="22"
+                                 VerticalOptions="Center"
+                                 Opacity="0"
+                                 Scale="0.96">
+                <Border Style="{StaticResource HeroCard}"
+                        Padding="24,20"
+                        MaximumWidthRequest="340"
+                        HorizontalOptions="Center">
+                    <VerticalStackLayout Spacing="6">
+                        <Label Text="COEPD"
+                               FontSize="30"
+                               FontAttributes="Bold"
+                               TextColor="White"
+                               HorizontalTextAlignment="Center" />
+                        <Label Text="MOBILE CRM"
+                               FontSize="12"
+                               FontAttributes="Bold"
+                               CharacterSpacing="2.6"
+                               TextColor="#BFDBFE"
+                               HorizontalTextAlignment="Center" />
+                    </VerticalStackLayout>
+                </Border>
+
+                <VerticalStackLayout Spacing="10"
+                                     HorizontalOptions="Center"
+                                     MaximumWidthRequest="340">
+                    <Label Text="Lead Command Center"
+                           FontSize="26"
+                           FontAttributes="Bold"
+                           TextColor="White"
+                           HorizontalTextAlignment="Center" />
+                    <Label Text="A premium mobile workspace for COEPD teams to review leads, monitor activity, and move faster on every conversation."
+                           FontSize="15"
+                           LineHeight="1.35"
+                           TextColor="#D7E2F1"
+                           HorizontalTextAlignment="Center" />
+                </VerticalStackLayout>
+
+                <Grid ColumnDefinitions="*,*"
+                      ColumnSpacing="12"
+                      MaximumWidthRequest="340"
+                      HorizontalOptions="Center">
+                    <Border Padding="16"
+                            Background="#13213B"
+                            StrokeThickness="0"
+                            StrokeShape="RoundRectangle 22">
+                        <VerticalStackLayout Spacing="4">
+                            <Label Text="Fast Login"
+                                   FontSize="14"
+                                   FontAttributes="Bold"
+                                   TextColor="White" />
+                            <Label Text="Persistent session restore"
+                                   FontSize="12"
+                                   TextColor="#BFDBFE" />
+                        </VerticalStackLayout>
+                    </Border>
+                    <Border Grid.Column="1"
+                            Padding="16"
+                            Background="#13213B"
+                            StrokeThickness="0"
+                            StrokeShape="RoundRectangle 22">
+                        <VerticalStackLayout Spacing="4">
+                            <Label Text="Live Alerts"
+                                   FontSize="14"
+                                   FontAttributes="Bold"
+                                   TextColor="White" />
+                            <Label Text="New leads with sound"
+                                   FontSize="12"
+                                   TextColor="#BFDBFE" />
+                        </VerticalStackLayout>
+                    </Border>
+                </Grid>
+
+                <Border Padding="18,16"
+                        MaximumWidthRequest="340"
+                        HorizontalOptions="Center"
+                        Background="#182742"
+                        StrokeThickness="0"
+                        StrokeShape="RoundRectangle 24">
+                    <Grid ColumnDefinitions="Auto,*"
+                          ColumnSpacing="14">
+                        <ActivityIndicator IsRunning="True"
+                                           Color="{StaticResource AppAccentBlue}"
+                                           WidthRequest="28"
+                                           HeightRequest="28"
+                                           VerticalOptions="Center" />
+                        <VerticalStackLayout Grid.Column="1"
+                                             Spacing="2"
+                                             VerticalOptions="Center">
+                            <Label Text="Preparing secure workspace"
+                                   FontSize="15"
+                                   FontAttributes="Bold"
+                                   TextColor="White" />
+                            <Label Text="Loading saved session and live services"
+                                   FontSize="12"
+                                   TextColor="#BFDBFE" />
+                        </VerticalStackLayout>
+                    </Grid>
+                </Border>
+            </VerticalStackLayout>
+        </ScrollView>
     </Grid>
 </ContentPage>

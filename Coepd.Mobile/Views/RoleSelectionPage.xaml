@@ -5,66 +5,177 @@
              x:Class="Coepd.Mobile.Views.RoleSelectionPage"
              x:DataType="viewModels:RoleSelectionViewModel"
              Title="Choose Access"
-             BackgroundColor="#F2F7FB">
+             NavigationPage.HasNavigationBar="False"
+             BackgroundColor="{StaticResource AppPageBackground}">
     <ScrollView>
-        <VerticalStackLayout Padding="24,28,24,36" Spacing="22">
-            <Border Padding="24"
-                    Background="#0F172A"
-                    StrokeThickness="0"
-                    StrokeShape="RoundRectangle 32">
-                <VerticalStackLayout Spacing="10">
-                    <Label Text="COEPD Leads"
+        <VerticalStackLayout x:Name="RoleSelectionContent"
+                             Padding="20,26,20,36"
+                             Spacing="20"
+                             Opacity="0"
+                             Scale="0.97">
+            <Grid ColumnDefinitions="*"
+                  RowDefinitions="Auto,Auto"
+                  RowSpacing="4">
+                <Label Text="Choose Access"
+                       FontSize="28"
+                       FontAttributes="Bold"
+                       TextColor="{StaticResource AppTextPrimary}" />
+                <Label Grid.Row="1"
+                       Text="Select the right workspace for your role."
+                       FontSize="14"
+                       TextColor="{StaticResource AppTextMuted}" />
+            </Grid>
+
+            <Border Style="{StaticResource HeroCard}" Padding="24">
+                <VerticalStackLayout Spacing="12">
+                    <Border Padding="10,6"
+                            HorizontalOptions="Start"
+                            Background="#172554"
+                            StrokeThickness="0"
+                            StrokeShape="RoundRectangle 16">
+                        <Label Text="TEAM WORKSPACES"
+                               FontSize="12"
+                               FontAttributes="Bold"
+                               TextColor="#BFDBFE"
+                               TextTransform="Uppercase" />
+                    </Border>
+                    <Label Text="COEPD mobile CRM"
                            FontSize="30"
                            FontAttributes="Bold"
                            TextColor="White" />
-                    <Label Text="Choose the workspace that matches your team access."
+                    <Label Text="Choose the workspace that matches your role and open the right SaaS dashboard for your day."
                            FontSize="15"
                            TextColor="#CBD5E1" />
                 </VerticalStackLayout>
             </Border>
 
-            <Border Padding="22" Background="#FFFFFF" Stroke="#CFE7E7" StrokeShape="RoundRectangle 28">
-                <VerticalStackLayout Spacing="14">
-                    <Label Text="ADMIN"
-                           FontSize="12"
-                           FontAttributes="Bold"
-                           TextColor="#0F766E" />
-                    <Label Text="Operations Control"
-                           FontSize="24"
-                           FontAttributes="Bold"
-                           TextColor="#0F172A" />
-                    <Label Text="View analytics, manage staff access, review all leads, and remove invalid records."
-                           FontSize="14"
-                           TextColor="#64748B" />
+            <Border Style="{StaticResource AppCard}" Padding="22" Background="{StaticResource AppSurface}">
+                <VerticalStackLayout Spacing="16">
+                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="14">
+                        <Border WidthRequest="52"
+                                HeightRequest="52"
+                                Padding="0"
+                                Background="{StaticResource AppAccentBlueSoft}"
+                                StrokeThickness="0"
+                                StrokeShape="RoundRectangle 18">
+                            <Label Text="A"
+                                   FontSize="20"
+                                   FontAttributes="Bold"
+                                   TextColor="{StaticResource AppAccentBlue}"
+                                   HorizontalOptions="Center"
+                                   VerticalOptions="Center"
+                                   HorizontalTextAlignment="Center"
+                                   VerticalTextAlignment="Center" />
+                        </Border>
+                        <VerticalStackLayout Grid.Column="1" Spacing="4">
+                            <Label Text="Admin Workspace"
+                                   FontSize="22"
+                                   FontAttributes="Bold"
+                                   TextColor="{StaticResource AppTextPrimary}" />
+                            <Label Text="Full lead control, analytics visibility, and delete access."
+                                   FontSize="14"
+                                   TextColor="{StaticResource AppTextSecondary}" />
+                        </VerticalStackLayout>
+                    </Grid>
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                        <Border Style="{StaticResource AppCard}" Padding="14" Background="{StaticResource AppSurfaceMuted}">
+                            <Label Text="Analytics"
+                                   HorizontalTextAlignment="Center"
+                                   TextColor="{StaticResource AppTextPrimary}"
+                                   FontAttributes="Bold" />
+                        </Border>
+                        <Border Grid.Column="1" Style="{StaticResource AppCard}" Padding="14" Background="{StaticResource AppSurfaceMuted}">
+                            <Label Text="Lead Ops"
+                                   HorizontalTextAlignment="Center"
+                                   TextColor="{StaticResource AppTextPrimary}"
+                                   FontAttributes="Bold" />
+                        </Border>
+                    </Grid>
+                    <Label Text="Best for leadership, operations monitoring, and full control."
+                           FontSize="13"
+                           TextColor="{StaticResource AppTextMuted}" />
                     <Button Text="Continue as Admin"
                             Clicked="OnAdminClicked"
-                            BackgroundColor="#0F766E"
-                            TextColor="White"
-                            CornerRadius="18"
-                            HeightRequest="56" />
+                            Style="{StaticResource PrimaryActionButton}" />
                 </VerticalStackLayout>
             </Border>
 
-            <Border Padding="22" Background="#FFFFFF" Stroke="#D8E3F8" StrokeShape="RoundRectangle 28">
-                <VerticalStackLayout Spacing="14">
-                    <Label Text="STAFF"
-                           FontSize="12"
-                           FontAttributes="Bold"
-                           TextColor="#2563EB" />
-                    <Label Text="Lead Review Desk"
-                           FontSize="24"
-                           FontAttributes="Bold"
-                           TextColor="#0F172A" />
-                    <Label Text="Track fresh leads, refresh the live list, and stay focused with read-only access."
-                           FontSize="14"
-                           TextColor="#64748B" />
+            <Border Style="{StaticResource AppCard}" Padding="22" Background="{StaticResource AppSurface}">
+                <VerticalStackLayout Spacing="16">
+                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="14">
+                        <Border WidthRequest="52"
+                                HeightRequest="52"
+                                Padding="0"
+                                Background="{StaticResource AppAccentSlateSoft}"
+                                StrokeThickness="0"
+                                StrokeShape="RoundRectangle 18">
+                            <Label Text="S"
+                                   FontSize="20"
+                                   FontAttributes="Bold"
+                                   TextColor="{StaticResource AppAccentSlate}"
+                                   HorizontalOptions="Center"
+                                   VerticalOptions="Center"
+                                   HorizontalTextAlignment="Center"
+                                   VerticalTextAlignment="Center" />
+                        </Border>
+                        <VerticalStackLayout Grid.Column="1" Spacing="4">
+                            <Label Text="Staff Workspace"
+                                   FontSize="22"
+                                   FontAttributes="Bold"
+                                   TextColor="{StaticResource AppTextPrimary}" />
+                            <Label Text="Fast search, read-only lead review, and live refresh for mobile teams."
+                                   FontSize="14"
+                                   TextColor="{StaticResource AppTextSecondary}" />
+                        </VerticalStackLayout>
+                    </Grid>
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                        <Border Style="{StaticResource AppCard}" Padding="14" Background="{StaticResource AppSurfaceMuted}">
+                            <Label Text="Search"
+                                   HorizontalTextAlignment="Center"
+                                   TextColor="{StaticResource AppTextPrimary}"
+                                   FontAttributes="Bold" />
+                        </Border>
+                        <Border Grid.Column="1" Style="{StaticResource AppCard}" Padding="14" Background="{StaticResource AppSurfaceMuted}">
+                            <Label Text="Refresh"
+                                   HorizontalTextAlignment="Center"
+                                   TextColor="{StaticResource AppTextPrimary}"
+                                   FontAttributes="Bold" />
+                        </Border>
+                    </Grid>
+                    <Label Text="Best for quick lead review, follow-up, and live monitoring."
+                           FontSize="13"
+                           TextColor="{StaticResource AppTextMuted}" />
                     <Button Text="Continue as Staff"
                             Clicked="OnStaffClicked"
-                            BackgroundColor="#2563EB"
-                            TextColor="White"
-                            CornerRadius="18"
-                            HeightRequest="56" />
+                            Style="{StaticResource SecondaryActionButton}"
+                            BackgroundColor="{StaticResource AppAccentSlate}" />
                 </VerticalStackLayout>
+            </Border>
+
+            <Border Style="{StaticResource AppCard}"
+                    Padding="18"
+                    Background="{StaticResource AppSurfaceMuted}">
+                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                    <Border WidthRequest="42"
+                            HeightRequest="42"
+                            Background="{StaticResource AppAccentBlueSoft}"
+                            StrokeThickness="0"
+                            StrokeShape="RoundRectangle 14">
+                        <Label Text="i"
+                               FontAttributes="Bold"
+                               FontSize="18"
+                               TextColor="{StaticResource AppAccentBlue}"
+                               HorizontalOptions="Center"
+                               VerticalOptions="Center"
+                               HorizontalTextAlignment="Center"
+                               VerticalTextAlignment="Center" />
+                    </Border>
+                    <Label Grid.Column="1"
+                           Text="Sessions stay signed in until you explicitly use Logout."
+                           FontSize="13"
+                           TextColor="{StaticResource AppTextSecondary}"
+                           VerticalTextAlignment="Center" />
+                </Grid>
             </Border>
         </VerticalStackLayout>
     </ScrollView>

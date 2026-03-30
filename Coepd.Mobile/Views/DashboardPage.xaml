@@ -4,96 +4,96 @@
              xmlns:viewModels="clr-namespace:Coepd.Mobile.ViewModels"
              x:Class="Coepd.Mobile.Views.DashboardPage"
              x:DataType="viewModels:DashboardViewModel"
-             Title="Dashboard"
-             BackgroundColor="#F2F7FB">
-    <ScrollView>
-        <VerticalStackLayout Padding="20,24,20,34" Spacing="18">
-            <Border Padding="22" Background="#0F172A" StrokeThickness="0" StrokeShape="RoundRectangle 30">
-                <VerticalStackLayout Spacing="12">
-                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
-                        <VerticalStackLayout Spacing="4">
-                            <Label Text="COEPD Mobile Dashboard"
-                                   FontSize="28"
-                                   FontAttributes="Bold"
-                                   TextColor="White" />
-                            <Label Text="{Binding RoleLabel}"
-                                   FontSize="13"
-                                   TextColor="#67E8F9" />
-                            <Label Text="{Binding WorkspaceLabel}"
-                                   FontSize="13"
-                                   TextColor="#CBD5E1" />
+             BackgroundColor="#F5F7FB"
+             Shell.NavBarIsVisible="False">
+    <RefreshView Command="{Binding RefreshCommand}" IsRefreshing="{Binding IsLoading}">
+        <ScrollView>
+            <VerticalStackLayout Padding="20,20,20,32" Spacing="18">
+                <Frame Style="{StaticResource HeroFrame}">
+                    <VerticalStackLayout Spacing="14">
+                        <Grid ColumnDefinitions="*,Auto,Auto">
+                            <Label Text="COEPD Dashboard" TextColor="White" FontSize="24" FontAttributes="Bold" />
+                            <HorizontalStackLayout Grid.Column="1" Spacing="8" VerticalOptions="Center">
+                                <Ellipse x:Name="LiveDot" WidthRequest="8" HeightRequest="8" Fill="#22C55E" />
+                                <Label Text="LIVE" TextColor="#D1FAE5" FontSize="12" FontAttributes="Bold" />
+                            </HorizontalStackLayout>
+                            <Button Grid.Column="2" Text="Logout" Clicked="OnLogoutClicked" BackgroundColor="#22FFFFFF" TextColor="White" CornerRadius="12" FontAttributes="Bold" FontSize="12" Padding="12,8" Margin="12,0,0,0" />
+                        </Grid>
+                        <Frame Style="{StaticResource BadgeFrame}" BackgroundColor="#19FFFFFF" HorizontalOptions="Start">
+                            <Label Text="{Binding RoleBadgeText}" TextColor="White" FontSize="11" FontAttributes="Bold" />
+                        </Frame>
+                        <Label Text="{Binding RoleSubtitle}" TextColor="#D7E8FF" FontSize="14" LineHeight="1.4" />
+                        <Label>
+                            <Label.FormattedText>
+                                <FormattedString>
+                                    <Span Text="Live view: " TextColor="White" />
+                                    <Span Text="{Binding TotalLeads}" TextColor="White" FontAttributes="Bold" />
+                                    <Span Text=" total, " TextColor="White" />
+                                    <Span Text="{Binding TodayLeads}" TextColor="White" FontAttributes="Bold" />
+                                    <Span Text=" today..." TextColor="White" />
+                                </FormattedString>
+                            </Label.FormattedText>
+                        </Label>
+                        <Label Text="Auto-refresh every 5 seconds" TextColor="#0EA5E9" FontSize="13" FontAttributes="Bold" />
+                    </VerticalStackLayout>
+                </Frame>
+
+                <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" ColumnSpacing="14" RowSpacing="14">
+                    <Frame Grid.Row="0" Grid.Column="0" Style="{StaticResource CardFrame}">
+                        <VerticalStackLayout Spacing="12">
+                            <Border StrokeThickness="0" StrokeShape="RoundRectangle 2" HeightRequest="3" BackgroundColor="#0B1C2C" />
+                            <Label Text="📊" FontSize="22" />
+                            <Label Text="{Binding TotalLeads}" Style="{StaticResource StatValue}" TextColor="#0B1C2C" />
+                            <Label Text="TOTAL LEADS" FontSize="11" TextColor="#6B7280" FontAttributes="Bold" />
+                            <Label Text="All live inbound records" FontSize="11" TextColor="#6B7280" />
+                            <Label Text="{Binding TotalTrendText}" TextColor="{Binding TotalTrendColor}" FontSize="12" FontAttributes="Bold" />
                         </VerticalStackLayout>
-                        <Button Grid.Column="1"
-                                Text="Logout"
-                                Clicked="OnLogoutClicked"
-                                BackgroundColor="#172554"
-                                TextColor="White"
-                                CornerRadius="16"
-                                HeightRequest="46" />
-                    </Grid>
-                    <Label Text="{Binding SummaryText}"
-                           FontSize="13"
-                           TextColor="#CBD5E1" />
-                </VerticalStackLayout>
-            </Border>
+                    </Frame>
+                    <Frame Grid.Row="0" Grid.Column="1" Style="{StaticResource CardFrame}">
+                        <VerticalStackLayout Spacing="12">
+                            <Border StrokeThickness="0" StrokeShape="RoundRectangle 2" HeightRequest="3" BackgroundColor="#3B82F6" />
+                            <Label Text="⚡" FontSize="22" />
+                            <Label Text="{Binding TodayLeads}" Style="{StaticResource StatValue}" TextColor="#3B82F6" />
+                            <Label Text="TODAY" FontSize="11" TextColor="#6B7280" FontAttributes="Bold" />
+                            <Label Text="Fresh leads since midnight" FontSize="11" TextColor="#6B7280" />
+                            <Label Text="{Binding TodayTrendText}" TextColor="{Binding TodayTrendColor}" FontSize="12" FontAttributes="Bold" />
+                        </VerticalStackLayout>
+                    </Frame>
+                    <Frame Grid.Row="1" Grid.Column="0" Style="{StaticResource CardFrame}">
+                        <VerticalStackLayout Spacing="12">
+                            <Border StrokeThickness="0" StrokeShape="RoundRectangle 2" HeightRequest="3" BackgroundColor="#14B8A6" />
+                            <Label Text="🤖" FontSize="22" />
+                            <Label Text="{Binding ChatbotLeads}" Style="{StaticResource StatValue}" TextColor="#14B8A6" />
+                            <Label Text="CHATBOT" FontSize="11" TextColor="#6B7280" FontAttributes="Bold" />
+                            <Label Text="Assistant-generated leads" FontSize="11" TextColor="#6B7280" />
+                            <Label Text="{Binding ChatbotTrendText}" TextColor="{Binding ChatbotTrendColor}" FontSize="12" FontAttributes="Bold" />
+                        </VerticalStackLayout>
+                    </Frame>
+                    <Frame Grid.Row="1" Grid.Column="1" Style="{StaticResource CardFrame}">
+                        <VerticalStackLayout Spacing="12">
+                            <Border StrokeThickness="0" StrokeShape="RoundRectangle 2" HeightRequest="3" BackgroundColor="#F59E0B" />
+                            <Label Text="🌐" FontSize="22" />
+                            <Label Text="{Binding WebsiteLeads}" Style="{StaticResource StatValue}" TextColor="#F59E0B" />
+                            <Label Text="WEBSITE" FontSize="11" TextColor="#6B7280" FontAttributes="Bold" />
+                            <Label Text="Direct website conversions" FontSize="11" TextColor="#6B7280" />
+                            <Label Text="{Binding WebsiteTrendText}" TextColor="{Binding WebsiteTrendColor}" FontSize="12" FontAttributes="Bold" />
+                        </VerticalStackLayout>
+                    </Frame>
+                </Grid>
 
-            <Grid ColumnDefinitions="*,*" ColumnSpacing="14" RowDefinitions="Auto,Auto">
-                <Border Grid.Row="0" Grid.Column="0" Padding="18" Background="#FFFFFF" Stroke="#D7E3F4" StrokeShape="RoundRectangle 24">
-                    <VerticalStackLayout Spacing="8">
-                        <Label Text="Total Leads" FontSize="13" TextColor="#64748B" />
-                        <Label Text="{Binding TotalLeads}" FontSize="30" FontAttributes="Bold" TextColor="#0F172A" />
-                        <Label Text="All active captured enquiries" FontSize="12" TextColor="#94A3B8" />
+                <Frame Style="{StaticResource CardFrame}">
+                    <VerticalStackLayout Spacing="16">
+                        <VerticalStackLayout Spacing="4">
+                            <Label Text="Quick Actions" Style="{StaticResource SectionTitle}" FontSize="20" />
+                            <Label Text="Open lead operations or pull a fresh live sync." Style="{StaticResource MutedLabel}" />
+                        </VerticalStackLayout>
+                        <Button Text="Open Lead Explorer" Style="{StaticResource PrimaryButton}" Command="{Binding OpenLeadsCommand}" />
+                        <Button Text="Refresh Dashboard" Style="{StaticResource OutlineButton}" Command="{Binding RefreshCommand}" />
                     </VerticalStackLayout>
-                </Border>
-                <Border Grid.Row="0" Grid.Column="1" Padding="18" Background="#FFFFFF" Stroke="#D7E3F4" StrokeShape="RoundRectangle 24">
-                    <VerticalStackLayout Spacing="8">
-                        <Label Text="Today's Leads" FontSize="13" TextColor="#64748B" />
-                        <Label Text="{Binding TodayLeads}" FontSize="30" FontAttributes="Bold" TextColor="#0F172A" />
-                        <Label Text="Fresh activity for the current day" FontSize="12" TextColor="#94A3B8" />
-                    </VerticalStackLayout>
-                </Border>
-                <Border Grid.Row="1" Grid.Column="0" Padding="18" Background="#FFFFFF" Stroke="#D7E3F4" StrokeShape="RoundRectangle 24">
-                    <VerticalStackLayout Spacing="8">
-                        <Label Text="Chatbot Leads" FontSize="13" TextColor="#64748B" />
-                        <Label Text="{Binding ChatbotLeads}" FontSize="30" FontAttributes="Bold" TextColor="#0F172A" />
-                        <Label Text="Conversations converted to leads" FontSize="12" TextColor="#94A3B8" />
-                    </VerticalStackLayout>
-                </Border>
-                <Border Grid.Row="1" Grid.Column="1" Padding="18" Background="#FFFFFF" Stroke="#D7E3F4" StrokeShape="RoundRectangle 24">
-                    <VerticalStackLayout Spacing="8">
-                        <Label Text="Website Leads" FontSize="13" TextColor="#64748B" />
-                        <Label Text="{Binding WebsiteLeads}" FontSize="30" FontAttributes="Bold" TextColor="#0F172A" />
-                        <Label Text="Form submissions from the website" FontSize="12" TextColor="#94A3B8" />
-                    </VerticalStackLayout>
-                </Border>
-            </Grid>
+                </Frame>
 
-            <Border Padding="22" Background="#FFFFFF" Stroke="#D7E3F4" StrokeShape="RoundRectangle 28">
-                <VerticalStackLayout Spacing="14">
-                    <Label Text="Quick Actions"
-                           FontSize="20"
-                           FontAttributes="Bold"
-                           TextColor="#0F172A" />
-                    <Button Text="Open Lead Explorer"
-                            Clicked="OnOpenLeadsClicked"
-                            BackgroundColor="#22C55E"
-                            TextColor="White"
-                            CornerRadius="18"
-                            HeightRequest="54" />
-                    <Button Text="Refresh Dashboard"
-                            Clicked="OnRefreshClicked"
-                            BackgroundColor="#2563EB"
-                            TextColor="White"
-                            CornerRadius="18"
-                            HeightRequest="54" />
-                    <Label Text="{Binding StatusMessage}"
-                           FontSize="13"
-                           TextColor="#64748B" />
-                    <ActivityIndicator IsRunning="{Binding IsBusy}"
-                                       IsVisible="{Binding IsBusy}"
-                                       Color="#0F766E" />
-                </VerticalStackLayout>
-            </Border>
-        </VerticalStackLayout>
-    </ScrollView>
+                <Label Text="Last sync kept active for your workspace feed." Style="{StaticResource MutedLabel}" HorizontalTextAlignment="Center" />
+            </VerticalStackLayout>
+        </ScrollView>
+    </RefreshView>
 </ContentPage>

@@ -1,3 +1,4 @@
+using System.Windows.Input;
 using Coepd.Mobile.Models;
 using Coepd.Mobile.Services;
 
@@ -9,16 +10,15 @@ public class LoginViewModel : BaseViewModel
     private readonly AuthService _authService;
     private string _email = string.Empty;
     private string _password = string.Empty;
-    private string _baseUrl = string.Empty;
     private string _role = "staff";
+    private bool _isPasswordHidden = true;
 
     public LoginViewModel(ApiSession session, AuthService authService)
     {
         _session = session;
         _authService = authService;
-        _baseUrl = _session.BaseUrl;
-        Title = "Secure Login";
-        StatusMessage = "Use your COEPD credentials to continue.";
+        LoginCommand = new Command(async () => await LoginAsync(), () => !IsLoading);
+        TogglePasswordCommand = new Command(() => IsPasswordHidden = !IsPasswordHidden);
     }
 
     public string Email
@@ -33,30 +33,49 @@ public class LoginViewModel : BaseViewModel
         set => SetProperty(ref _password, value);
     }
 
-    public string BaseUrl
-    {
-        get => _baseUrl;
-        set => SetProperty(ref _baseUrl, value);
-    }
-
     public string Role
     {
         get => _role;
         set => SetProperty(ref _role, value);
     }
 
+    public bool IsPasswordHidden
+    {
+        get => _isPasswordHidden;
+        set => SetProperty(ref _isPasswordHidden, value);
+    }
+
+    public string ServerDisplay => _session.BaseUrl.Replace("https://", string.Empty).TrimEnd('/');
+
+    public ICommand LoginCommand { get; }
+    public ICommand TogglePasswordCommand { get; }
+
     public async Task<(bool Success, string Role, string Error)> LoginAsync(CancellationToken cancellationToken = default)
     {
-        if (IsBusy) return (false, string.Empty, "Please wait.");
-        if (string.IsNullOrWhiteSpace(Email) || string.IsNullOrWhiteSpace(Password))
+        if (IsLoading)
         {
-            return (false, string.Empty, "Enter both email and password.");
+            return (false, string.Empty, "Please wait.");
         }
 
-        IsBusy = true;
+        ErrorMessage = string.Empty;
+
+        if (string.IsNullOrWhiteSpace(Email) || !Email.Contains('@'))
+        {
+            ErrorMessage = "Enter a valid work email address.";
+            return (false, string.Empty, ErrorMessage);
+        }
+
+        if (string.IsNullOrWhiteSpace(Password))
+        {
+            ErrorMessage = "Enter your password to continue.";
+            return (false, string.Empty, ErrorMessage);
+        }
+
+        IsLoading = true;
+        ((Command)LoginCommand).ChangeCanExecute();
+
         try
         {
-            _session.BaseUrl = BaseUrl;
             var response = await _authService.LoginAsync(new User
             {
                 Email = Email,
@@ -66,17 +85,23 @@ public class LoginViewModel : BaseViewModel
 
             if (!response.Success)
             {
-                StatusMessage = string.IsNullOrWhiteSpace(response.Error) ? "Login failed." : response.Error;
-                return (false, string.Empty, StatusMessage);
+                ErrorMessage = string.IsNullOrWhiteSpace(response.Error)
+                    ? "Unable to access the workspace right now."
+                    : response.Error;
+                return (false, string.Empty, ErrorMessage);
             }
 
-            var resolvedRole = string.IsNullOrWhiteSpace(response.Role) ? Role : response.Role;
-            StatusMessage = "Login successful.";
-            return (true, resolvedRole, string.Empty);
+            return (true, string.IsNullOrWhiteSpace(response.Role) ? Role : response.Role, string.Empty);
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = ex.Message;
+            return (false, string.Empty, ErrorMessage);
         }
         finally
         {
-            IsBusy = false;
+            IsLoading = false;
+            ((Command)LoginCommand).ChangeCanExecute();
         }
     }
 }

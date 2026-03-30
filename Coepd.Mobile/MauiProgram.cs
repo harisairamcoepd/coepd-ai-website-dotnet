@@ -25,6 +25,8 @@ public static class MauiProgram
 		builder.Services.AddSingleton<ApiSession>();
 		builder.Services.AddSingleton<AuthService>();
 		builder.Services.AddSingleton<LeadApiService>();
+		builder.Services.AddSingleton<NotificationService>();
+		builder.Services.AddSingleton<LeadMonitorService>();
 
 		builder.Services.AddTransient<RoleSelectionViewModel>();
 		builder.Services.AddTransient<LoginViewModel>();
@@ -36,6 +38,9 @@ public static class MauiProgram
 		builder.Services.AddTransient<LoginPage>();
 		builder.Services.AddTransient<DashboardPage>();
 		builder.Services.AddTransient<LeadsPage>();
+		builder.Services.AddTransient<AlertsPage>();
+		builder.Services.AddTransient<SettingsPage>();
+		builder.Services.AddTransient<AppShell>();
 
 		return builder.Build();
 	}

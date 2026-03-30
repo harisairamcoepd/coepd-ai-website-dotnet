@@ -9,9 +9,9 @@ public partial class DashboardPage : ContentPage
     private readonly DashboardViewModel _viewModel;
     private readonly AuthService _authService;
     private readonly IServiceProvider _serviceProvider;
-    private bool _loaded;
+    private bool _isLoggingOut;
 
-    public DashboardPage(DashboardViewModel viewModel, AuthService authService, IServiceProvider serviceProvider)
+    public DashboardPage(DashboardViewModel viewModel, AuthService authService, LeadMonitorService leadMonitorService, IServiceProvider serviceProvider)
     {
         InitializeComponent();
         _viewModel = viewModel;
@@ -23,24 +23,37 @@ public partial class DashboardPage : ContentPage
     protected override async void OnAppearing()
     {
         base.OnAppearing();
-        if (_loaded) return;
-        _loaded = true;
+        _viewModel.Start();
         await _viewModel.LoadAsync();
+        _ = PulseLiveIndicatorAsync();
     }
 
-    private async void OnOpenLeadsClicked(object sender, EventArgs e)
+    protected override void OnDisappearing()
     {
-        await Navigation.PushAsync(_serviceProvider.GetRequiredService<LeadsPage>());
+        _viewModel.Stop();
+        base.OnDisappearing();
     }
 
-    private async void OnRefreshClicked(object sender, EventArgs e)
+    private async void OnLogoutClicked(object? sender, EventArgs e)
     {
-        await _viewModel.LoadAsync();
-    }
+        if (_isLoggingOut)
+        {
+            return;
+        }
 
-    private async void OnLogoutClicked(object sender, EventArgs e)
-    {
+        _isLoggingOut = true;
+        _viewModel.Stop();
         _authService.Logout();
-        await Navigation.PopToRootAsync();
+        Application.Current!.Windows[0].Page = new NavigationPage(_serviceProvider.GetRequiredService<RoleSelectionPage>());
+        await Task.CompletedTask;
+    }
+
+    private async Task PulseLiveIndicatorAsync()
+    {
+        while (IsVisible)
+        {
+            await LiveDot.FadeTo(0.25, 700, Easing.SinInOut);
+            await LiveDot.FadeTo(1, 700, Easing.SinInOut);
+        }
     }
 }

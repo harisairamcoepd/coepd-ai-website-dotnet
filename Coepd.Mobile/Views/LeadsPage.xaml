@@ -6,122 +6,120 @@
              x:Class="Coepd.Mobile.Views.LeadsPage"
              x:Name="LeadsPageRoot"
              x:DataType="viewModels:LeadsViewModel"
-             Title="Leads"
-             BackgroundColor="#F2F7FB">
+             BackgroundColor="#F5F7FB"
+             Shell.NavBarIsVisible="False">
     <Grid RowDefinitions="Auto,*">
-        <VerticalStackLayout Padding="20,20,20,12" Spacing="14">
-            <Border Padding="18" Background="#FFFFFF" Stroke="#D7E3F4" StrokeShape="RoundRectangle 26">
-                <VerticalStackLayout Spacing="10">
-                    <Label Text="Lead Explorer"
-                           FontSize="28"
-                           FontAttributes="Bold"
-                           TextColor="#0F172A" />
-                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
-                        <Border Padding="10,6"
-                                HorizontalOptions="Start"
-                                Background="#E2E8F0"
-                                StrokeThickness="0"
-                                StrokeShape="RoundRectangle 16">
-                            <Label Text="{Binding RoleLabel}"
-                                   FontSize="12"
-                                   FontAttributes="Bold"
-                                   TextColor="#0F172A" />
-                        </Border>
-                        <Label Grid.Column="1"
-                               Text="{Binding LeadCount, StringFormat='Live records: {0}'}"
-                               VerticalTextAlignment="Center"
-                               HorizontalTextAlignment="End"
-                               FontSize="12"
-                               TextColor="#64748B" />
+        <VerticalStackLayout Padding="20,20,20,14" Spacing="14">
+            <Frame Style="{StaticResource HeroFrame}">
+                <VerticalStackLayout Spacing="14">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <Label Text="Lead Explorer" TextColor="White" FontSize="24" FontAttributes="Bold" />
+                        <Frame Grid.Column="1" Style="{StaticResource BadgeFrame}" BackgroundColor="#19FFFFFF">
+                            <Label Text="LIVE" TextColor="White" FontSize="11" FontAttributes="Bold" />
+                        </Frame>
                     </Grid>
+                    <HorizontalStackLayout Spacing="10">
+                        <Frame Style="{StaticResource BadgeFrame}" BackgroundColor="#19FFFFFF"><Label Text="{Binding SelectedFilter}" TextColor="White" FontSize="11" FontAttributes="Bold" /></Frame>
+                        <Frame Style="{StaticResource BadgeFrame}" BackgroundColor="#19FFFFFF"><Label Text="{Binding FilteredLeads.Count, StringFormat='{}{0} records'}" TextColor="White" FontSize="11" FontAttributes="Bold" /></Frame>
+                    </HorizontalStackLayout>
+                    <Label Text="Auto-refresh every 5 seconds" TextColor="#0EA5E9" FontSize="13" FontAttributes="Bold" />
                     <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
-                        <Entry Grid.Column="0"
-                               Placeholder="Search by name, phone, email, location"
-                               Text="{Binding SearchText}"
-                               ClearButtonVisibility="WhileEditing"
-                               BackgroundColor="#F8FAFC" />
-                        <Button Grid.Column="1"
-                                Text="Search"
-                                Clicked="OnSearchClicked"
-                                BackgroundColor="#0F766E"
-                                TextColor="White"
-                                CornerRadius="16" />
+                        <Frame Grid.Column="0" Style="{StaticResource InputFrame}" Padding="12,8">
+                            <Entry Text="{Binding SearchQuery}" Placeholder="Search by name, phone, email" BackgroundColor="Transparent" />
+                        </Frame>
+                        <Button Grid.Column="1" Text="Search" Command="{Binding SearchCommand}" Style="{StaticResource PrimaryButton}" HeightRequest="48" WidthRequest="110" />
                     </Grid>
-                    <Label Text="{Binding StatusMessage}"
-                           FontSize="13"
-                           TextColor="#64748B" />
                 </VerticalStackLayout>
-            </Border>
+            </Frame>
+
+            <ScrollView Orientation="Horizontal">
+                <HorizontalStackLayout Spacing="10">
+                    <Frame Style="{StaticResource BadgeFrame}" BackgroundColor="{Binding AllFilterBackground}"><Frame.GestureRecognizers><TapGestureRecognizer Command="{Binding ApplyFilterCommand}" CommandParameter="All" /></Frame.GestureRecognizers><Label Text="All" TextColor="{Binding AllFilterTextColor}" FontAttributes="Bold" /></Frame>
+                    <Frame Style="{StaticResource BadgeFrame}" BackgroundColor="{Binding TodayFilterBackground}"><Frame.GestureRecognizers><TapGestureRecognizer Command="{Binding ApplyFilterCommand}" CommandParameter="Today" /></Frame.GestureRecognizers><Label Text="Today" TextColor="{Binding TodayFilterTextColor}" FontAttributes="Bold" /></Frame>
+                    <Frame Style="{StaticResource BadgeFrame}" BackgroundColor="{Binding ChatbotFilterBackground}"><Frame.GestureRecognizers><TapGestureRecognizer Command="{Binding ApplyFilterCommand}" CommandParameter="Chatbot" /></Frame.GestureRecognizers><Label Text="Chatbot" TextColor="{Binding ChatbotFilterTextColor}" FontAttributes="Bold" /></Frame>
+                    <Frame Style="{StaticResource BadgeFrame}" BackgroundColor="{Binding WebsiteFilterBackground}"><Frame.GestureRecognizers><TapGestureRecognizer Command="{Binding ApplyFilterCommand}" CommandParameter="Website" /></Frame.GestureRecognizers><Label Text="Website" TextColor="{Binding WebsiteFilterTextColor}" FontAttributes="Bold" /></Frame>
+                </HorizontalStackLayout>
+            </ScrollView>
         </VerticalStackLayout>
 
-        <RefreshView Grid.Row="1"
-                     IsRefreshing="{Binding IsRefreshing}"
-                     Command="{x:Null}"
-                     Refreshing="OnRefreshing">
-            <CollectionView ItemsSource="{Binding Leads}"
-                            Margin="20,0,20,20"
-                            SelectionMode="None">
+        <Grid Grid.Row="1">
+            <CollectionView ItemsSource="{Binding FilteredLeads}" Margin="20,0,20,20" SelectionMode="None">
+                <CollectionView.ItemsLayout>
+                    <LinearItemsLayout Orientation="Vertical" ItemSpacing="12" />
+                </CollectionView.ItemsLayout>
                 <CollectionView.EmptyView>
-                    <VerticalStackLayout Padding="30" Spacing="8">
-                        <Label Text="No leads found"
-                               HorizontalTextAlignment="Center"
-                               FontSize="20"
-                               FontAttributes="Bold"
-                               TextColor="#0F172A" />
-                        <Label Text="Pull to refresh or search again."
-                               HorizontalTextAlignment="Center"
-                               TextColor="#64748B" />
+                    <VerticalStackLayout VerticalOptions="Center" HorizontalOptions="Center" Spacing="14">
+                        <Label Text="◌" FontSize="56" TextColor="#CBD5E1" HorizontalTextAlignment="Center" />
+                        <Label Text="No leads yet" FontSize="22" FontAttributes="Bold" TextColor="#0B1C2C" HorizontalTextAlignment="Center" />
+                        <Label Text="Leads will appear here when your live sources start syncing." FontSize="14" TextColor="#6B7280" HorizontalTextAlignment="Center" />
+                        <Button Text="Refresh" Command="{Binding RefreshCommand}" Style="{StaticResource OutlineButton}" WidthRequest="180" />
                     </VerticalStackLayout>
                 </CollectionView.EmptyView>
                 <CollectionView.ItemTemplate>
-                    <DataTemplate x:DataType="models:Lead">
-                        <Border Margin="0,0,0,12"
-                                Padding="18"
-                                Background="#FFFFFF"
-                                Stroke="#D7E3F4"
-                                StrokeShape="RoundRectangle 24">
-                            <VerticalStackLayout Spacing="10">
-                                <Grid ColumnDefinitions="*,Auto">
-                                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
-                                        <Border Padding="0"
-                                                WidthRequest="46"
-                                                HeightRequest="46"
-                                                Background="#E0F2FE"
-                                                StrokeThickness="0"
-                                                StrokeShape="RoundRectangle 23">
-                                            <Label Text="{Binding Initials}"
-                                                   FontSize="14"
-                                                   FontAttributes="Bold"
-                                                   TextColor="#0F172A"
-                                                   HorizontalOptions="Center"
-                                                   VerticalOptions="Center"
-                                                   HorizontalTextAlignment="Center"
-                                                   VerticalTextAlignment="Center" />
-                                        </Border>
-                                        <VerticalStackLayout Grid.Column="1" Spacing="2">
-                                            <Label Text="{Binding Name}" FontSize="18" FontAttributes="Bold" TextColor="#0F172A" />
-                                            <Label Text="{Binding SourceLabel}" FontSize="12" TextColor="{Binding SourceAccent}" />
-                                        </VerticalStackLayout>
-                                    </Grid>
-                                    <Button Grid.Column="1"
-                                            Text="Delete"
-                                            Clicked="OnDeleteClicked"
-                                            CommandParameter="{Binding .}"
-                                            IsVisible="{Binding CanDelete}"
-                                            BackgroundColor="#EF4444"
-                                            TextColor="White"
-                                            CornerRadius="14"
-                                            HeightRequest="40" />
+                    <DataTemplate x:DataType="models:LeadModel">
+                        <SwipeView>
+                            <SwipeView.RightItems>
+                                <SwipeItems Mode="Reveal">
+                                    <SwipeItem Text="Call" BackgroundColor="#22C55E" Command="{Binding Source={x:Reference LeadsPageRoot}, Path=BindingContext.CallLeadCommand}" CommandParameter="{Binding .}" />
+                                </SwipeItems>
+                            </SwipeView.RightItems>
+                            <SwipeView.LeftItems>
+                                <SwipeItems Mode="Reveal">
+                                    <SwipeItem Text="Delete" BackgroundColor="#EF4444" IsVisible="{Binding Source={x:Reference LeadsPageRoot}, Path=BindingContext.IsAdmin}" Command="{Binding Source={x:Reference LeadsPageRoot}, Path=BindingContext.DeleteLeadCommand}" CommandParameter="{Binding .}" />
+                                </SwipeItems>
+                            </SwipeView.LeftItems>
+                            <Frame Style="{StaticResource CardFrame}" Padding="18">
+                                <Grid>
+                                    <VerticalStackLayout Spacing="14">
+                                        <Grid ColumnDefinitions="Auto,*,Auto">
+                                            <Frame WidthRequest="44" HeightRequest="44" CornerRadius="22" Padding="0" HasShadow="False" BackgroundColor="#DBEAFE">
+                                                <Label Text="{Binding Initials}" HorizontalOptions="Center" VerticalOptions="Center" HorizontalTextAlignment="Center" VerticalTextAlignment="Center" TextColor="#0B1C2C" FontAttributes="Bold" />
+                                            </Frame>
+                                            <VerticalStackLayout Grid.Column="1" Margin="12,0,0,0" Spacing="4">
+                                                <Label Text="{Binding Name}" FontSize="17" FontAttributes="Bold" TextColor="#0B1C2C" />
+                                                <Frame Style="{StaticResource BadgeFrame}" Padding="8,4" BackgroundColor="{Binding SourceColor}" HorizontalOptions="Start">
+                                                    <Label Text="{Binding SourceLabel}" TextColor="White" FontSize="10" FontAttributes="Bold" />
+                                                </Frame>
+                                            </VerticalStackLayout>
+                                            <Button Grid.Column="2" Text="Delete" BackgroundColor="#FEE2E2" TextColor="#EF4444" FontSize="11" FontAttributes="Bold" CornerRadius="10" Padding="12,8" IsVisible="{Binding Source={x:Reference LeadsPageRoot}, Path=BindingContext.IsAdmin}" Command="{Binding Source={x:Reference LeadsPageRoot}, Path=BindingContext.DeleteLeadCommand}" CommandParameter="{Binding .}" />
+                                        </Grid>
+                                        <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                                            <Frame Grid.Column="0" Style="{StaticResource InputFrame}" Padding="12,10">
+                                                <HorizontalStackLayout Spacing="8">
+                                                    <Label Text="☎" TextColor="#3B82F6" />
+                                                    <Label Text="{Binding Phone}" TextColor="#0B1C2C" FontSize="13" />
+                                                </HorizontalStackLayout>
+                                            </Frame>
+                                            <Frame Grid.Column="1" Style="{StaticResource InputFrame}" Padding="12,10">
+                                                <HorizontalStackLayout Spacing="8">
+                                                    <Label Text="📍" TextColor="#3B82F6" />
+                                                    <Label Text="{Binding Location}" TextColor="#0B1C2C" FontSize="13" />
+                                                </HorizontalStackLayout>
+                                            </Frame>
+                                        </Grid>
+                                        <Frame Style="{StaticResource InputFrame}" Padding="12,10">
+                                            <HorizontalStackLayout Spacing="8">
+                                                <Label Text="✉" TextColor="#3B82F6" />
+                                                <Label Text="{Binding Email}" TextColor="#0B1C2C" FontSize="13" />
+                                            </HorizontalStackLayout>
+                                        </Frame>
+                                        <Label Text="{Binding TimestampText}" FontSize="11" TextColor="#6B7280" />
+                                    </VerticalStackLayout>
+                                    <Frame x:Name="NewBadge" Style="{StaticResource BadgeFrame}" BackgroundColor="#DCFCE7" Padding="10,5" HorizontalOptions="End" VerticalOptions="Start" IsVisible="{Binding IsNew}">
+                                        <Label Text="NEW" TextColor="#22C55E" FontSize="10" FontAttributes="Bold" />
+                                    </Frame>
                                 </Grid>
-                                <Label Text="{Binding Phone, StringFormat='Phone: {0}'}" TextColor="#0F172A" />
-                                <Label Text="{Binding Email, StringFormat='Email: {0}'}" TextColor="#334155" />
-                                <Label Text="{Binding Location, StringFormat='Location: {0}'}" TextColor="#475569" />
-                                <Label Text="{Binding DateTimeDisplay}" FontSize="12" TextColor="#64748B" />
-                            </VerticalStackLayout>
-                        </Border>
+                            </Frame>
+                        </SwipeView>
                     </DataTemplate>
                 </CollectionView.ItemTemplate>
             </CollectionView>
-        </RefreshView>
+
+            <VerticalStackLayout x:Name="SkeletonHost" IsVisible="{Binding IsLoading}" Margin="20,0,20,20" Spacing="12">
+                <Frame x:Name="Skeleton1" ControlTemplate="{StaticResource ShimmerSkeletonTemplate}" Style="{StaticResource CardFrame}" HeightRequest="154" />
+                <Frame x:Name="Skeleton2" ControlTemplate="{StaticResource ShimmerSkeletonTemplate}" Style="{StaticResource CardFrame}" HeightRequest="154" />
+                <Frame x:Name="Skeleton3" ControlTemplate="{StaticResource ShimmerSkeletonTemplate}" Style="{StaticResource CardFrame}" HeightRequest="154" />
+            </VerticalStackLayout>
+        </Grid>
     </Grid>
 </ContentPage>

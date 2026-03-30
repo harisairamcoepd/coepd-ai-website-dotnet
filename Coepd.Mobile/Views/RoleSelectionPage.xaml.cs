@@ -6,12 +6,23 @@ namespace Coepd.Mobile.Views;
 public partial class RoleSelectionPage : ContentPage
 {
     private readonly IServiceProvider _serviceProvider;
+    private bool _animated;
 
     public RoleSelectionPage(RoleSelectionViewModel viewModel, IServiceProvider serviceProvider)
     {
         InitializeComponent();
         BindingContext = viewModel;
         _serviceProvider = serviceProvider;
+    }
+
+    protected override async void OnAppearing()
+    {
+        base.OnAppearing();
+        if (_animated) return;
+        _animated = true;
+        await Task.WhenAll(
+            RoleSelectionContent.FadeTo(1, 320, Easing.CubicOut),
+            RoleSelectionContent.ScaleTo(1, 320, Easing.CubicOut));
     }
 
     private async Task OpenLoginAsync(string role)

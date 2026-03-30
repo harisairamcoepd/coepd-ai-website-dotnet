@@ -6,11 +6,15 @@ namespace Coepd.Mobile.Services;
 
 public class AuthService
 {
+    private const string SavedPasswordKey = "saved_password";
+    private const string SessionPersistedKey = "session_persisted";
     private readonly ApiSession _session;
+    private readonly LeadMonitorService _leadMonitorService;
 
-    public AuthService(ApiSession session)
+    public AuthService(ApiSession session, LeadMonitorService leadMonitorService)
     {
         _session = session;
+        _leadMonitorService = leadMonitorService;
     }
 
     public async Task<LoginResponse> LoginAsync(User user, CancellationToken cancellationToken = default)
@@ -40,14 +44,60 @@ public class AuthService
             var confirmedRole = await ConfirmSessionRoleAsync(cancellationToken) ?? (string.IsNullOrWhiteSpace(result.Role) ? role : result.Role);
             _session.CurrentRole = confirmedRole;
             _session.CurrentEmail = user.Email.Trim();
+            await SaveCredentialsAsync(user.Email.Trim(), user.Password);
+            Preferences.Default.Set(SessionPersistedKey, true);
+            await _leadMonitorService.StartAsync();
         }
 
         return result;
     }
 
+    public async Task<bool> TryRestoreSessionAsync(CancellationToken cancellationToken = default)
+    {
+        if (!Preferences.Default.Get(SessionPersistedKey, false))
+        {
+            return false;
+        }
+
+        if (string.IsNullOrWhiteSpace(_session.CurrentEmail) || string.IsNullOrWhiteSpace(_session.CurrentRole))
+        {
+            return false;
+        }
+
+        try
+        {
+            var savedPassword = await SecureStorage.Default.GetAsync(SavedPasswordKey);
+            if (string.IsNullOrWhiteSpace(savedPassword))
+            {
+                return false;
+            }
+
+            var result = await LoginAsync(new User
+            {
+                Email = _session.CurrentEmail,
+                Password = savedPassword,
+                Role = _session.CurrentRole
+            }, cancellationToken);
+
+            return result.Success;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
     public void Logout()
     {
+        _leadMonitorService.Stop();
+        SecureStorage.Default.Remove(SavedPasswordKey);
+        Preferences.Default.Set(SessionPersistedKey, false);
         _session.Clear();
+    }
+
+    private static async Task SaveCredentialsAsync(string email, string password)
+    {
+        await SecureStorage.Default.SetAsync(SavedPasswordKey, password ?? string.Empty);
     }
 
     private async Task<string?> ConfirmSessionRoleAsync(CancellationToken cancellationToken)
