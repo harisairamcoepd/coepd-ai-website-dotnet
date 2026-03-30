@@ -1,4 +1,4 @@
-using Coepd.Mobile.Models;
+using Coepd.Mobile.Services;
 using Coepd.Mobile.ViewModels;
 
 namespace Coepd.Mobile.Views;
@@ -6,47 +6,80 @@ namespace Coepd.Mobile.Views;
 public partial class LeadsPage : ContentPage
 {
     private readonly LeadsViewModel _viewModel;
-    private bool _loaded;
+    private readonly LeadMonitorService _leadMonitorService;
+    private bool _subscribed;
 
-    public LeadsPage(LeadsViewModel viewModel)
+    public LeadsPage(LeadsViewModel viewModel, LeadMonitorService leadMonitorService)
     {
         InitializeComponent();
         _viewModel = viewModel;
+        _leadMonitorService = leadMonitorService;
         BindingContext = _viewModel;
     }
 
     protected override async void OnAppearing()
     {
         base.OnAppearing();
-        if (_loaded) return;
-        _loaded = true;
+        _viewModel.Start();
+        SubscribeToLiveUpdates();
+        _ = AnimateSkeletonAsync();
         await _viewModel.LoadAsync();
     }
 
-    private async void OnSearchClicked(object sender, EventArgs e)
+    protected override void OnDisappearing()
     {
-        await _viewModel.LoadAsync();
+        _viewModel.Stop();
+        UnsubscribeFromLiveUpdates();
+        base.OnDisappearing();
     }
 
-    private async void OnRefreshing(object sender, EventArgs e)
+    private void SubscribeToLiveUpdates()
     {
-        _viewModel.IsRefreshing = true;
-        await _viewModel.LoadAsync();
-    }
-
-    private async void OnDeleteClicked(object sender, EventArgs e)
-    {
-        if (sender is not Button button || button.CommandParameter is not Lead lead) return;
-        var confirmed = await DisplayAlert("Delete Lead", $"Delete {lead.Name}?", "Delete", "Cancel");
-        if (!confirmed) return;
-
-        try
+        if (_subscribed)
         {
-            await _viewModel.DeleteLeadAsync(lead);
+            return;
         }
-        catch (Exception ex)
+
+        _leadMonitorService.LeadsUpdated += OnLeadsUpdated;
+        _subscribed = true;
+    }
+
+    private void UnsubscribeFromLiveUpdates()
+    {
+        if (!_subscribed)
         {
-            await DisplayAlert("Delete Failed", ex.Message, "Close");
+            return;
+        }
+
+        _leadMonitorService.LeadsUpdated -= OnLeadsUpdated;
+        _subscribed = false;
+    }
+
+    private async void OnLeadsUpdated(object? sender, EventArgs e)
+    {
+        if (!IsVisible)
+        {
+            return;
+        }
+
+        await _viewModel.LoadAsync();
+    }
+
+    private async Task AnimateSkeletonAsync()
+    {
+        while (IsVisible)
+        {
+            if (!_viewModel.IsLoading)
+            {
+                await Task.Delay(150);
+                continue;
+            }
+
+            foreach (var frame in new[] { Skeleton1, Skeleton2, Skeleton3 })
+            {
+                await frame.TranslateTo(12, 0, 450, Easing.SinInOut);
+                await frame.TranslateTo(0, 0, 450, Easing.SinInOut);
+            }
         }
     }
 }

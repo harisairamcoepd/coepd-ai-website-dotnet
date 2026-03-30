@@ -65,7 +65,7 @@ public class ApiSession
         return new HttpClient(handler)
         {
             BaseAddress = new Uri(NormalizeBaseUrl(baseUrl)),
-            Timeout = TimeSpan.FromSeconds(30)
+            Timeout = TimeSpan.FromSeconds(12)
         };
     }
 

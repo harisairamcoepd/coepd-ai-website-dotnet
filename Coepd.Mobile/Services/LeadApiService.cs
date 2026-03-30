@@ -45,7 +45,7 @@ public class LeadApiService
         };
     }
 
-    public async Task<List<Lead>> GetLeadsAsync(string? search = null, CancellationToken cancellationToken = default)
+    public async Task<List<LeadModel>> GetLeadsAsync(string? search = null, CancellationToken cancellationToken = default)
     {
         var url = "api/admin/leads";
         if (!string.IsNullOrWhiteSpace(search))
@@ -85,23 +85,31 @@ public class LeadApiService
         return JsonSerializer.Deserialize<List<LeadDto>>(json, _session.JsonOptions);
     }
 
-    private static Lead MapLead(LeadDto dto, bool canDelete)
+    private static LeadModel MapLead(LeadDto dto, bool canDelete)
     {
         var createdAt = ParseServerDate(dto.CreatedAtRaw);
-        return new Lead
+        _ = canDelete;
+
+        return new LeadModel
         {
             Id = dto.Id,
             Name = dto.Name,
             Phone = dto.Phone,
             Email = dto.Email,
             Location = dto.Location,
-            Source = dto.Source,
-            CreatedAt = createdAt,
-            DateTimeDisplay = string.IsNullOrWhiteSpace(dto.DateTimeDisplay)
-                ? createdAt.ToLocalTime().ToString("dd MMM yyyy hh:mm tt")
-                : dto.DateTimeDisplay,
-            CanDelete = canDelete
+            Source = MapSource(dto.Source),
+            CreatedAt = createdAt
         };
+    }
+
+    private static LeadSource MapSource(string? source)
+    {
+        if (string.Equals(source, "chatbot", StringComparison.OrdinalIgnoreCase))
+        {
+            return LeadSource.Chatbot;
+        }
+
+        return LeadSource.Website;
     }
 
     private async Task<DashboardStats> BuildStatsFromLeadsAsync(CancellationToken cancellationToken)
@@ -113,11 +121,8 @@ public class LeadApiService
         {
             TotalLeads = leads.Count,
             TodayLeads = leads.Count(x => x.CreatedAt.ToLocalTime().Date == today),
-            ChatbotLeads = leads.Count(x => string.Equals(x.Source, "chatbot", StringComparison.OrdinalIgnoreCase)),
-            WebsiteLeads = leads.Count(x =>
-                string.Equals(x.Source, "webpage", StringComparison.OrdinalIgnoreCase) ||
-                string.Equals(x.Source, "website", StringComparison.OrdinalIgnoreCase) ||
-                string.Equals(x.Source, "website_form", StringComparison.OrdinalIgnoreCase))
+            ChatbotLeads = leads.Count(x => x.Source == LeadSource.Chatbot),
+            WebsiteLeads = leads.Count(x => x.Source == LeadSource.Website)
         };
     }
 

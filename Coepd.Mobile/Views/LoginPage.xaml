@@ -4,72 +4,84 @@
              xmlns:viewModels="clr-namespace:Coepd.Mobile.ViewModels"
              x:Class="Coepd.Mobile.Views.LoginPage"
              x:DataType="viewModels:LoginViewModel"
-             Title="Login"
-             BackgroundColor="#F2F7FB">
-    <ScrollView>
-        <VerticalStackLayout Padding="24,28,24,36" Spacing="18">
-            <Border Padding="24" Background="#0F172A" StrokeThickness="0" StrokeShape="RoundRectangle 30">
-                <VerticalStackLayout Spacing="10">
-                    <Border Padding="10,6"
-                            HorizontalOptions="Start"
-                            Background="#172554"
-                            StrokeThickness="0"
-                            StrokeShape="RoundRectangle 16">
-                        <Label Text="{Binding Role}"
-                               FontSize="12"
-                               FontAttributes="Bold"
-                               TextColor="#93C5FD"
-                               TextTransform="Uppercase" />
-                    </Border>
-                    <Label Text="Secure sign in"
-                           FontSize="28"
-                           FontAttributes="Bold"
-                           TextColor="White" />
-                    <Label Text="Connect the mobile workspace to the live COEPD website and continue with your role-based access."
-                           FontSize="14"
-                           TextColor="#CBD5E1" />
-                </VerticalStackLayout>
-            </Border>
+             BackgroundColor="#0B1C2C"
+             Shell.NavBarIsVisible="False"
+             NavigationPage.HasNavigationBar="False">
+    <Grid>
+        <ScrollView>
+            <VerticalStackLayout Padding="20,28,20,24" Spacing="20">
+                <Frame Style="{StaticResource HeroFrame}">
+                    <Grid RowDefinitions="Auto,Auto,Auto" RowSpacing="14">
+                        <Label Text="COEPD" TextColor="White" FontSize="28" FontAttributes="Bold" />
+                        <VerticalStackLayout Grid.Row="1" Spacing="6">
+                            <Label Text="Welcome back" TextColor="White" FontSize="30" FontAttributes="Bold" />
+                            <Label Text="Sign in to your command center for secure access, real-time visibility, and faster lead action."
+                                   TextColor="#D7E8FF"
+                                   FontSize="14"
+                                   LineHeight="1.5" />
+                        </VerticalStackLayout>
+                        <FlexLayout Grid.Row="2" Direction="Row" Wrap="Wrap" AlignItems="Center">
+                            <Frame Style="{StaticResource BadgeFrame}" Margin="0,0,10,10" BackgroundColor="#22FFFFFF"><Label Text="Secure" TextColor="White" FontSize="12" FontAttributes="Bold" /></Frame>
+                            <Frame Style="{StaticResource BadgeFrame}" Margin="0,0,10,10" BackgroundColor="#22FFFFFF"><Label Text="Fast" TextColor="White" FontSize="12" FontAttributes="Bold" /></Frame>
+                            <Frame Style="{StaticResource BadgeFrame}" Margin="0,0,10,10" BackgroundColor="#22FFFFFF"><Label Text="Live" TextColor="White" FontSize="12" FontAttributes="Bold" /></Frame>
+                        </FlexLayout>
+                    </Grid>
+                </Frame>
 
-            <Border Padding="22" Background="#FFFFFF" Stroke="#D7E3F4" StrokeShape="RoundRectangle 28">
-                <VerticalStackLayout Spacing="16">
-                    <Label Text="Live server"
-                           FontSize="13"
-                           TextColor="#64748B" />
-                    <Entry Placeholder="Website URL"
-                           Text="{Binding BaseUrl}"
-                           Keyboard="Url"
-                           ClearButtonVisibility="WhileEditing"
-                           BackgroundColor="#F8FAFC" />
-                    <Label Text="Account"
-                           FontSize="13"
-                           TextColor="#64748B" />
-                    <Entry Placeholder="Email"
-                           Text="{Binding Email}"
-                           Keyboard="Email"
-                           ClearButtonVisibility="WhileEditing"
-                           BackgroundColor="#F8FAFC" />
-                    <Label Text="Password"
-                           FontSize="13"
-                           TextColor="#64748B" />
-                    <Entry Placeholder="Password"
-                           Text="{Binding Password}"
-                           IsPassword="True"
-                           BackgroundColor="#F8FAFC" />
-                    <Button Text="Login to Workspace"
-                            Clicked="OnLoginClicked"
-                            BackgroundColor="#22C55E"
-                            TextColor="White"
-                            CornerRadius="18"
-                            HeightRequest="56" />
-                    <ActivityIndicator IsRunning="{Binding IsBusy}"
-                                       IsVisible="{Binding IsBusy}"
-                                       Color="#0F766E" />
-                    <Label Text="{Binding StatusMessage}"
-                           FontSize="13"
-                           TextColor="#64748B" />
-                </VerticalStackLayout>
-            </Border>
-        </VerticalStackLayout>
-    </ScrollView>
+                <Frame x:Name="LoginCard" Style="{StaticResource CardFrame}" Margin="0,-18,0,0">
+                    <VerticalStackLayout Spacing="18">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <VerticalStackLayout Spacing="4">
+                                <Label Text="Secure workspace login" Style="{StaticResource SectionTitle}" />
+                                <Label Text="Access your premium CRM workspace with your COEPD identity." Style="{StaticResource MutedLabel}" />
+                            </VerticalStackLayout>
+                            <Frame Grid.Column="1" Style="{StaticResource BadgeFrame}" BackgroundColor="#DBEAFE" VerticalOptions="Start">
+                                <Label Text="FAST" TextColor="#3B82F6" FontSize="11" FontAttributes="Bold" />
+                            </Frame>
+                        </Grid>
+
+                        <VerticalStackLayout Spacing="6">
+                            <Label Text="Live server" Style="{StaticResource MutedLabel}" />
+                            <Label Text="{Binding ServerDisplay}" TextColor="#3B82F6" FontSize="14" FontAttributes="Bold" />
+                        </VerticalStackLayout>
+
+                        <Frame Style="{StaticResource InputFrame}">
+                            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                                <Label Text="✉" FontSize="18" TextColor="#6B7280" VerticalOptions="Center" />
+                                <Entry Grid.Column="1" Text="{Binding Email}" Placeholder="name@company.com" Keyboard="Email" ClearButtonVisibility="WhileEditing" />
+                            </Grid>
+                        </Frame>
+
+                        <Frame Style="{StaticResource InputFrame}">
+                            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
+                                <Label Text="🔒" FontSize="18" TextColor="#6B7280" VerticalOptions="Center" />
+                                <Entry Grid.Column="1" Text="{Binding Password}" IsPassword="{Binding IsPasswordHidden}" Placeholder="Password" />
+                                <ImageButton Grid.Column="2" Command="{Binding TogglePasswordCommand}" HeightRequest="22" WidthRequest="22">
+                                    <ImageButton.Source>
+                                        <FontImageSource Glyph="👁" Color="#6B7280" Size="18" />
+                                    </ImageButton.Source>
+                                </ImageButton>
+                            </Grid>
+                        </Frame>
+
+                        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                            <Label Text="ⓘ" TextColor="#3B82F6" FontSize="16" />
+                            <Label Grid.Column="1" Text="Use your COEPD credentials to continue" Style="{StaticResource MutedLabel}" />
+                        </Grid>
+
+                        <Label Text="{Binding ErrorMessage}" TextColor="#EF4444" FontSize="13" />
+
+                        <Button Text="Login to Workspace" Style="{StaticResource PrimaryButton}" Clicked="OnLoginClicked" />
+                    </VerticalStackLayout>
+                </Frame>
+            </VerticalStackLayout>
+        </ScrollView>
+
+        <Grid IsVisible="{Binding IsLoading}" BackgroundColor="#660B1C2C" InputTransparent="False">
+            <VerticalStackLayout VerticalOptions="Center" HorizontalOptions="Center" Spacing="14">
+                <ActivityIndicator IsRunning="{Binding IsLoading}" Color="White" WidthRequest="40" HeightRequest="40" />
+                <Label Text="Signing in..." TextColor="White" FontSize="16" FontAttributes="Bold" />
+            </VerticalStackLayout>
+        </Grid>
+    </Grid>
 </ContentPage>

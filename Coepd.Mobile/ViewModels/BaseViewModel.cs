@@ -5,16 +5,40 @@ namespace Coepd.Mobile.ViewModels;
 
 public abstract class BaseViewModel : INotifyPropertyChanged
 {
-    private bool _isBusy;
+    private bool _isLoading;
+    private string _errorMessage = string.Empty;
     private string _title = string.Empty;
-    private string _statusMessage = string.Empty;
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
+    public bool IsLoading
+    {
+        get => _isLoading;
+        set
+        {
+            if (SetProperty(ref _isLoading, value))
+            {
+                OnPropertyChanged(nameof(IsBusy));
+            }
+        }
+    }
+
     public bool IsBusy
     {
-        get => _isBusy;
-        set => SetProperty(ref _isBusy, value);
+        get => IsLoading;
+        set => IsLoading = value;
+    }
+
+    public string ErrorMessage
+    {
+        get => _errorMessage;
+        set => SetProperty(ref _errorMessage, value);
+    }
+
+    public string StatusMessage
+    {
+        get => ErrorMessage;
+        set => ErrorMessage = value;
     }
 
     public string Title
@@ -23,21 +47,19 @@ public abstract class BaseViewModel : INotifyPropertyChanged
         set => SetProperty(ref _title, value);
     }
 
-    public string StatusMessage
-    {
-        get => _statusMessage;
-        set => SetProperty(ref _statusMessage, value);
-    }
-
     protected bool SetProperty<T>(ref T storage, T value, [CallerMemberName] string? propertyName = null)
     {
-        if (EqualityComparer<T>.Default.Equals(storage, value)) return false;
+        if (EqualityComparer<T>.Default.Equals(storage, value))
+        {
+            return false;
+        }
+
         storage = value;
-        RaisePropertyChanged(propertyName);
+        OnPropertyChanged(propertyName);
         return true;
     }
 
-    protected void RaisePropertyChanged([CallerMemberName] string? propertyName = null)
+    protected void OnPropertyChanged([CallerMemberName] string? propertyName = null)
     {
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
     }
