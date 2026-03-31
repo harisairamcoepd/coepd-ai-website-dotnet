@@ -26,20 +26,6 @@ public partial class AppShell : Shell
             Icon = "dotnet_bot.png",
             ContentTemplate = new DataTemplate(() => serviceProvider.GetRequiredService<LeadsPage>())
         });
-        tabBar.Items.Add(new ShellContent
-        {
-            Title = "Alerts",
-            Route = "alerts",
-            Icon = "dotnet_bot.png",
-            ContentTemplate = new DataTemplate(() => serviceProvider.GetRequiredService<AlertsPage>())
-        });
-        tabBar.Items.Add(new ShellContent
-        {
-            Title = "Settings",
-            Route = "settings",
-            Icon = "dotnet_bot.png",
-            ContentTemplate = new DataTemplate(() => serviceProvider.GetRequiredService<SettingsPage>())
-        });
 
         Items.Add(tabBar);
     }

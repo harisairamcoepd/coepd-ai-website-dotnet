@@ -10,10 +10,13 @@ public class NotificationService
     public async Task EnsurePermissionAsync()
     {
 #if ANDROID
-        var status = await Permissions.CheckStatusAsync<Permissions.PostNotifications>();
-        if (status != PermissionStatus.Granted)
+        if (OperatingSystem.IsAndroidVersionAtLeast(33))
         {
-            await Permissions.RequestAsync<Permissions.PostNotifications>();
+            var status = await Permissions.CheckStatusAsync<Permissions.PostNotifications>();
+            if (status != PermissionStatus.Granted)
+            {
+                await Permissions.RequestAsync<Permissions.PostNotifications>();
+            }
         }
 
         CreateAndroidChannel();
@@ -23,8 +26,13 @@ public class NotificationService
     public Task ShowNewLeadNotificationAsync(string title, string message)
     {
 #if ANDROID
-        var context = Android.App.Application.Context;
-        var manager = (Android.App.NotificationManager?)context.GetSystemService(Android.Content.Context.NotificationService);
+        if (Android.App.Application.Context is not Android.Content.Context appContext ||
+            string.IsNullOrWhiteSpace(appContext.PackageName))
+        {
+            return Task.CompletedTask;
+        }
+
+        var manager = appContext.GetSystemService(Android.Content.Context.NotificationService) as Android.App.NotificationManager;
         if (manager == null)
         {
             return Task.CompletedTask;
@@ -32,25 +40,35 @@ public class NotificationService
 
         CreateAndroidChannel();
 
-        var soundUri = GetNotificationSoundUri(context);
+        var soundUri = GetNotificationSoundUri();
+        var launchIntent = appContext.PackageManager?.GetLaunchIntentForPackage(appContext.PackageName);
+        if (launchIntent == null)
+        {
+            return Task.CompletedTask;
+        }
 
-        var launchIntent = context.PackageManager?.GetLaunchIntentForPackage(context.PackageName!);
-        launchIntent?.SetFlags(Android.Content.ActivityFlags.SingleTop | Android.Content.ActivityFlags.ClearTop);
+        launchIntent.SetFlags(Android.Content.ActivityFlags.SingleTop | Android.Content.ActivityFlags.ClearTop);
 
-        var pendingIntent = Android.App.PendingIntent.GetActivity(
-            context,
-            1101,
-            launchIntent,
-            Android.App.PendingIntentFlags.UpdateCurrent | Android.App.PendingIntentFlags.Immutable);
+        var pendingFlags = Android.App.PendingIntentFlags.UpdateCurrent;
+        if (OperatingSystem.IsAndroidVersionAtLeast(23))
+        {
+            pendingFlags |= Android.App.PendingIntentFlags.Immutable;
+        }
 
-        var builder = new AndroidX.Core.App.NotificationCompat.Builder(context, ChannelId)
+        var pendingIntent = Android.App.PendingIntent.GetActivity(appContext, 1101, launchIntent, pendingFlags);
+        if (pendingIntent == null)
+        {
+            return Task.CompletedTask;
+        }
+
+        var builder = new AndroidX.Core.App.NotificationCompat.Builder(appContext, ChannelId)
             .SetContentTitle(title)
             .SetContentText(message)
             .SetSmallIcon(Resource.Mipmap.appicon)
             .SetAutoCancel(true)
             .SetPriority(AndroidX.Core.App.NotificationCompat.PriorityHigh)
             .SetDefaults((int)Android.App.NotificationDefaults.All)
-            .SetCategory(AndroidX.Core.App.NotificationCompat.CategoryAlarm)
+            .SetCategory(AndroidX.Core.App.NotificationCompat.CategoryMessage)
             .SetSound(soundUri)
             .SetVibrate(new long[] { 0, 180, 120, 180 })
             .SetContentIntent(pendingIntent);
@@ -68,8 +86,13 @@ public class NotificationService
             return;
         }
 
-        var context = Android.App.Application.Context;
-        var manager = (Android.App.NotificationManager?)context.GetSystemService(Android.Content.Context.NotificationService);
+        if (Android.App.Application.Context is not Android.Content.Context appContext ||
+            string.IsNullOrWhiteSpace(appContext.PackageName))
+        {
+            return;
+        }
+
+        var manager = appContext.GetSystemService(Android.Content.Context.NotificationService) as Android.App.NotificationManager;
         if (manager == null)
         {
             return;
@@ -77,10 +100,8 @@ public class NotificationService
 
         if (manager.GetNotificationChannel(ChannelId) != null)
         {
-            manager.DeleteNotificationChannel(ChannelId);
+            return;
         }
-
-        var soundUri = GetNotificationSoundUri(context);
 
         var audioAttributes = new Android.Media.AudioAttributes.Builder()
             .SetUsage(Android.Media.AudioUsageKind.Notification)
@@ -98,18 +119,14 @@ public class NotificationService
         channel.EnableLights(true);
         channel.EnableVibration(true);
         channel.SetVibrationPattern(new long[] { 0, 180, 120, 180 });
-        channel.SetSound(soundUri, audioAttributes);
+        channel.SetSound(GetNotificationSoundUri(), audioAttributes);
         manager.CreateNotificationChannel(channel);
     }
 
-    static Android.Net.Uri GetNotificationSoundUri(Android.Content.Context context)
+    static Android.Net.Uri GetNotificationSoundUri()
     {
-        var customUri = Android.Net.Uri.Parse(
-            $"{Android.Content.ContentResolver.SchemeAndroidResource}://{context.PackageName}/raw/lead_alert");
-
-        return customUri
-            ?? Android.Media.RingtoneManager.GetDefaultUri(Android.Media.RingtoneType.Notification)
-            ?? Android.Provider.Settings.System.DefaultNotificationUri;
+        return Android.Media.RingtoneManager.GetDefaultUri(Android.Media.RingtoneType.Notification)
+               ?? Android.Provider.Settings.System.DefaultNotificationUri!;
     }
 #endif
 }

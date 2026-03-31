@@ -13,6 +13,7 @@ public class ApiSession
     public ApiSession()
     {
         _baseUrl = Preferences.Default.Get("base_url", "https://coepdfinishingschool.somee.com/");
+        _jsonOptions.PropertyNameCaseInsensitive = true;
         _client = CreateClient(_baseUrl);
     }
 
@@ -65,7 +66,7 @@ public class ApiSession
         return new HttpClient(handler)
         {
             BaseAddress = new Uri(NormalizeBaseUrl(baseUrl)),
-            Timeout = TimeSpan.FromSeconds(12)
+            Timeout = TimeSpan.FromSeconds(20)
         };
     }
 

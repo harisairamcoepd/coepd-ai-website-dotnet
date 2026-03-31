@@ -12,18 +12,27 @@
             <VerticalStackLayout Padding="20,28,20,24" Spacing="20">
                 <Frame Style="{StaticResource HeroFrame}">
                     <Grid RowDefinitions="Auto,Auto,Auto" RowSpacing="14">
-                        <Label Text="COEPD" TextColor="White" FontSize="28" FontAttributes="Bold" />
+                        <HorizontalStackLayout Spacing="12" VerticalOptions="Center">
+                            <Image Source="coepd_mark.svg" WidthRequest="52" HeightRequest="52" />
+                            <Label Text="COEPD" TextColor="White" FontSize="28" FontAttributes="Bold" VerticalOptions="Center" />
+                        </HorizontalStackLayout>
                         <VerticalStackLayout Grid.Row="1" Spacing="6">
                             <Label Text="Welcome back" TextColor="White" FontSize="30" FontAttributes="Bold" />
-                            <Label Text="Sign in to your command center for secure access, real-time visibility, and faster lead action."
+                            <Label Text="Sign in to your command center for secure access and real-time visibility across your workspace."
                                    TextColor="#D7E8FF"
                                    FontSize="14"
                                    LineHeight="1.5" />
                         </VerticalStackLayout>
                         <FlexLayout Grid.Row="2" Direction="Row" Wrap="Wrap" AlignItems="Center">
-                            <Frame Style="{StaticResource BadgeFrame}" Margin="0,0,10,10" BackgroundColor="#22FFFFFF"><Label Text="Secure" TextColor="White" FontSize="12" FontAttributes="Bold" /></Frame>
-                            <Frame Style="{StaticResource BadgeFrame}" Margin="0,0,10,10" BackgroundColor="#22FFFFFF"><Label Text="Fast" TextColor="White" FontSize="12" FontAttributes="Bold" /></Frame>
-                            <Frame Style="{StaticResource BadgeFrame}" Margin="0,0,10,10" BackgroundColor="#22FFFFFF"><Label Text="Live" TextColor="White" FontSize="12" FontAttributes="Bold" /></Frame>
+                            <Frame Style="{StaticResource BadgeFrame}" Margin="0,0,10,10" BackgroundColor="#22FFFFFF">
+                                <Label Text="Secure" TextColor="White" FontSize="12" FontAttributes="Bold" />
+                            </Frame>
+                            <Frame Style="{StaticResource BadgeFrame}" Margin="0,0,10,10" BackgroundColor="#22FFFFFF">
+                                <Label Text="Professional" TextColor="White" FontSize="12" FontAttributes="Bold" />
+                            </Frame>
+                            <Frame Style="{StaticResource BadgeFrame}" Margin="0,0,10,10" BackgroundColor="#22FFFFFF">
+                                <Label Text="Live" TextColor="White" FontSize="12" FontAttributes="Bold" />
+                            </Frame>
                         </FlexLayout>
                     </Grid>
                 </Frame>
@@ -36,7 +45,7 @@
                                 <Label Text="Access your premium CRM workspace with your COEPD identity." Style="{StaticResource MutedLabel}" />
                             </VerticalStackLayout>
                             <Frame Grid.Column="1" Style="{StaticResource BadgeFrame}" BackgroundColor="#DBEAFE" VerticalOptions="Start">
-                                <Label Text="FAST" TextColor="#3B82F6" FontSize="11" FontAttributes="Bold" />
+                                <Label Text="SECURE" TextColor="#3B82F6" FontSize="11" FontAttributes="Bold" />
                             </Frame>
                         </Grid>
 
@@ -47,25 +56,25 @@
 
                         <Frame Style="{StaticResource InputFrame}">
                             <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
-                                <Label Text="✉" FontSize="18" TextColor="#6B7280" VerticalOptions="Center" />
+                                <Label Text="&#x2709;" FontSize="18" TextColor="#6B7280" VerticalOptions="Center" />
                                 <Entry Grid.Column="1" Text="{Binding Email}" Placeholder="name@company.com" Keyboard="Email" ClearButtonVisibility="WhileEditing" />
                             </Grid>
                         </Frame>
 
                         <Frame Style="{StaticResource InputFrame}">
                             <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
-                                <Label Text="🔒" FontSize="18" TextColor="#6B7280" VerticalOptions="Center" />
+                                <Label Text="&#x1F512;" FontSize="18" TextColor="#6B7280" VerticalOptions="Center" />
                                 <Entry Grid.Column="1" Text="{Binding Password}" IsPassword="{Binding IsPasswordHidden}" Placeholder="Password" />
                                 <ImageButton Grid.Column="2" Command="{Binding TogglePasswordCommand}" HeightRequest="22" WidthRequest="22">
                                     <ImageButton.Source>
-                                        <FontImageSource Glyph="👁" Color="#6B7280" Size="18" />
+                                        <FontImageSource Glyph="&#x1F441;" Color="#6B7280" Size="18" />
                                     </ImageButton.Source>
                                 </ImageButton>
                             </Grid>
                         </Frame>
 
                         <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
-                            <Label Text="ⓘ" TextColor="#3B82F6" FontSize="16" />
+                            <Label Text="&#x2139;" TextColor="#3B82F6" FontSize="16" />
                             <Label Grid.Column="1" Text="Use your COEPD credentials to continue" Style="{StaticResource MutedLabel}" />
                         </Grid>
 

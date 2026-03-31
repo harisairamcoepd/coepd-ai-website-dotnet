@@ -10,6 +10,7 @@ public partial class DashboardPage : ContentPage
     private readonly AuthService _authService;
     private readonly IServiceProvider _serviceProvider;
     private bool _isLoggingOut;
+    private bool _isPulsing;
 
     public DashboardPage(DashboardViewModel viewModel, AuthService authService, LeadMonitorService leadMonitorService, IServiceProvider serviceProvider)
     {
@@ -25,12 +26,17 @@ public partial class DashboardPage : ContentPage
         base.OnAppearing();
         _viewModel.Start();
         await _viewModel.LoadAsync();
-        _ = PulseLiveIndicatorAsync();
+        if (!_isPulsing)
+        {
+            _isPulsing = true;
+            _ = PulseLiveIndicatorAsync();
+        }
     }
 
     protected override void OnDisappearing()
     {
         _viewModel.Stop();
+        _isPulsing = false;
         base.OnDisappearing();
     }
 
@@ -50,7 +56,7 @@ public partial class DashboardPage : ContentPage
 
     private async Task PulseLiveIndicatorAsync()
     {
-        while (IsVisible)
+        while (IsVisible && _isPulsing)
         {
             await LiveDot.FadeTo(0.25, 700, Easing.SinInOut);
             await LiveDot.FadeTo(1, 700, Easing.SinInOut);

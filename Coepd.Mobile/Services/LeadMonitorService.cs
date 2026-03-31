@@ -14,6 +14,7 @@ public class LeadMonitorService
     private CancellationTokenSource? _cts;
     private Task? _worker;
     private bool _initialized;
+    private readonly SemaphoreSlim _startStopGate = new(1, 1);
 
     public event EventHandler? LeadsUpdated;
     public event EventHandler<LeadModel>? NewLeadDetected;
@@ -27,25 +28,41 @@ public class LeadMonitorService
 
     public async Task StartAsync()
     {
-        await _notificationService.EnsurePermissionAsync();
-        if (_worker != null || !_session.IsAuthenticated)
+        await _startStopGate.WaitAsync();
+        try
         {
-            return;
-        }
+            await _notificationService.EnsurePermissionAsync();
+            if ((_worker != null && !_worker.IsCompleted) || !_session.IsAuthenticated)
+            {
+                return;
+            }
 
-        _cts = new CancellationTokenSource();
-        _timer = new PeriodicTimer(PollInterval);
-        _worker = Task.Run(() => RunAsync(_cts.Token));
+            _cts = new CancellationTokenSource();
+            _timer = new PeriodicTimer(PollInterval);
+            _worker = Task.Run(() => RunAsync(_cts.Token));
+        }
+        finally
+        {
+            _startStopGate.Release();
+        }
     }
 
     public void Stop()
     {
-        _cts?.Cancel();
-        _timer?.Dispose();
-        _cts = null;
-        _timer = null;
-        _worker = null;
-        _initialized = false;
+        _startStopGate.Wait();
+        try
+        {
+            _cts?.Cancel();
+            _timer?.Dispose();
+            _cts = null;
+            _timer = null;
+            _worker = null;
+            _initialized = false;
+        }
+        finally
+        {
+            _startStopGate.Release();
+        }
     }
 
     private async Task RunAsync(CancellationToken cancellationToken)
@@ -84,7 +101,7 @@ public class LeadMonitorService
         await _gate.WaitAsync(cancellationToken);
         try
         {
-            var leads = await _leadApiService.GetLeadsAsync(null, cancellationToken);
+            var leads = await _leadApiService.GetLeadsAsync(null, false, cancellationToken);
             var newestLead = leads
                 .OrderByDescending(x => x.Id)
                 .ThenByDescending(x => x.CreatedAt)

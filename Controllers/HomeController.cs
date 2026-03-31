@@ -30,7 +30,25 @@ namespace Coepd.Web.Controllers
         [HttpGet]
         public ActionResult Health()
         {
-            return Json(new { status = "running", database = "connected", auth = "enabled" }, JsonRequestBehavior.AllowGet);
+            var dbStatus = "connected";
+            try
+            {
+                if (StorageMode.UseRuntimeStore())
+                {
+                    dbStatus = "runtime-store";
+                }
+                else
+                {
+                    _db.Database.Connection.Open();
+                    _db.Database.Connection.Close();
+                }
+            }
+            catch
+            {
+                dbStatus = "degraded";
+            }
+
+            return Json(new { status = "running", database = dbStatus, auth = "enabled" }, JsonRequestBehavior.AllowGet);
         }
 
         [HttpGet]
@@ -323,6 +341,16 @@ namespace Coepd.Web.Controllers
             var index = input.IndexOf(find, StringComparison.Ordinal);
             if (index < 0) return input;
             return input.Substring(0, index) + replace + input.Substring(index + find.Length);
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                _db.Dispose();
+            }
+
+            base.Dispose(disposing);
         }
     }
 }

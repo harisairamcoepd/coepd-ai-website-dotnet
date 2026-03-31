@@ -10,6 +10,7 @@ public class DashboardViewModel : BaseViewModel
     private readonly LeadApiService _leadApiService;
     private readonly IDispatcherTimer _timer;
     private DashboardStats _stats = new();
+    private DashboardStats _previousStats = new();
 
     public DashboardViewModel(ApiSession session, LeadApiService leadApiService)
     {
@@ -34,14 +35,15 @@ public class DashboardViewModel : BaseViewModel
     public string RoleSubtitle => IsAdmin
         ? "You have full command over lead routing, deletion, and live workspace controls."
         : "You are monitoring the live lead pipeline with staff workspace access.";
-    public string TotalTrendText => "↑ 12%";
-    public Color TotalTrendColor => Color.FromArgb("#22C55E");
-    public string TodayTrendText => "↑ 18%";
-    public Color TodayTrendColor => Color.FromArgb("#22C55E");
-    public string ChatbotTrendText => "↑ 7%";
-    public Color ChatbotTrendColor => Color.FromArgb("#22C55E");
-    public string WebsiteTrendText => "↓ 3%";
-    public Color WebsiteTrendColor => Color.FromArgb("#EF4444");
+
+    public string TotalTrendText => BuildTrendText(_stats.TotalLeads, _previousStats.TotalLeads);
+    public Color TotalTrendColor => GetTrendColor(_stats.TotalLeads, _previousStats.TotalLeads);
+    public string TodayTrendText => BuildTrendText(_stats.TodayLeads, _previousStats.TodayLeads);
+    public Color TodayTrendColor => GetTrendColor(_stats.TodayLeads, _previousStats.TodayLeads);
+    public string ChatbotTrendText => BuildTrendText(_stats.ChatbotLeads, _previousStats.ChatbotLeads);
+    public Color ChatbotTrendColor => GetTrendColor(_stats.ChatbotLeads, _previousStats.ChatbotLeads);
+    public string WebsiteTrendText => BuildTrendText(_stats.WebsiteLeads, _previousStats.WebsiteLeads);
+    public Color WebsiteTrendColor => GetTrendColor(_stats.WebsiteLeads, _previousStats.WebsiteLeads);
 
     public ICommand RefreshCommand { get; }
     public ICommand OpenLeadsCommand { get; }
@@ -82,7 +84,8 @@ public class DashboardViewModel : BaseViewModel
 
         try
         {
-            _stats = await _leadApiService.GetStatsAsync(cancellationToken);
+            _previousStats = _stats;
+            _stats = await _leadApiService.GetStatsAsync(showLoader, cancellationToken);
             RaiseStatsChanged();
         }
         catch (Exception ex)
@@ -107,5 +110,32 @@ public class DashboardViewModel : BaseViewModel
         OnPropertyChanged(nameof(RoleBadgeText));
         OnPropertyChanged(nameof(RoleSubtitle));
         OnPropertyChanged(nameof(IsAdmin));
+        OnPropertyChanged(nameof(TotalTrendText));
+        OnPropertyChanged(nameof(TodayTrendText));
+        OnPropertyChanged(nameof(ChatbotTrendText));
+        OnPropertyChanged(nameof(WebsiteTrendText));
+        OnPropertyChanged(nameof(TotalTrendColor));
+        OnPropertyChanged(nameof(TodayTrendColor));
+        OnPropertyChanged(nameof(ChatbotTrendColor));
+        OnPropertyChanged(nameof(WebsiteTrendColor));
+    }
+
+    private static string BuildTrendText(int current, int previous)
+    {
+        if (previous <= 0)
+        {
+            return "↑ 100%";
+        }
+
+        var deltaPercent = ((double)(current - previous) / previous) * 100d;
+        var arrow = deltaPercent >= 0 ? "↑" : "↓";
+        return $"{arrow} {Math.Abs(deltaPercent):0}%";
+    }
+
+    private static Color GetTrendColor(int current, int previous)
+    {
+        return current >= previous
+            ? Color.FromArgb("#22C55E")
+            : Color.FromArgb("#EF4444");
     }
 }

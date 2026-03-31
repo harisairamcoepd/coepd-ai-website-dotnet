@@ -15,6 +15,7 @@ namespace Coepd.Web.Controllers
     {
         private readonly CoepdDbContext _db = new CoepdDbContext();
         private static readonly ConcurrentDictionary<string, ChatSessionState> ChatSessions = new ConcurrentDictionary<string, ChatSessionState>();
+        private static readonly TimeSpan ChatSessionTtl = TimeSpan.FromMinutes(30);
         private static readonly Regex PhoneRegex = new Regex(@"^\d{10}$", RegexOptions.Compiled);
         private static readonly Regex EmailRegex = new Regex(@"^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$", RegexOptions.Compiled);
 
@@ -52,7 +53,7 @@ namespace Coepd.Web.Controllers
             try
             {
                 DiagnosticLogger.Info("LeadApi.Index", "Fetching leads from SQL database.");
-                var leads = _db.Leads
+                var leads = _db.Leads.AsNoTracking()
                     .Where(x => x.Source != "chatbot_draft")
                     .OrderByDescending(x => x.CreatedAt)
                     .Select(x => new
@@ -112,6 +113,14 @@ namespace Coepd.Web.Controllers
                 Source = source,
                 CreatedAt = DateTime.UtcNow
             };
+
+            if (string.IsNullOrWhiteSpace(lead.Name) ||
+                string.IsNullOrWhiteSpace(lead.Phone) ||
+                string.IsNullOrWhiteSpace(lead.Email))
+            {
+                Response.StatusCode = 422;
+                return Json(new { ok = false, success = false, error = "name, phone and email are required" });
+            }
 
             if (StorageMode.UseRuntimeStore())
             {
@@ -196,10 +205,12 @@ namespace Coepd.Web.Controllers
             if (message == "__restart__")
             {
                 ChatSessions[userId] = new ChatSessionState();
+                CleanupExpiredSessions();
                 return BuildChatResponse(InitialGreeting, "Say hi or hello", 10, "greeting");
             }
 
             var session = ChatSessions.GetOrAdd(userId, _ => new ChatSessionState());
+            session.LastUpdatedUtc = DateTime.UtcNow;
 
             if (message == "__init__" || message == string.Empty)
             {
@@ -314,6 +325,7 @@ namespace Coepd.Web.Controllers
         private void SaveChatLead(ChatSessionState session, bool finalize)
         {
             if (session == null) return;
+            session.LastUpdatedUtc = DateTime.UtcNow;
 
             var lead = new Lead
             {
@@ -389,6 +401,7 @@ namespace Coepd.Web.Controllers
             public string Stage { get; set; } = "greeting";
             public int LeadId { get; set; }
             public DateTime CreatedAt { get; set; }
+            public DateTime LastUpdatedUtc { get; set; } = DateTime.UtcNow;
             public string Name { get; set; }
             public string Phone { get; set; }
             public string Email { get; set; }
@@ -402,6 +415,25 @@ namespace Coepd.Web.Controllers
 
             [JsonProperty("user_id")]
             public string UserId { get; set; }
+        }
+
+        private static void CleanupExpiredSessions()
+        {
+            var cutoff = DateTime.UtcNow.Subtract(ChatSessionTtl);
+            foreach (var pair in ChatSessions.Where(x => x.Value.LastUpdatedUtc < cutoff).ToList())
+            {
+                ChatSessions.TryRemove(pair.Key, out _);
+            }
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                _db.Dispose();
+            }
+
+            base.Dispose(disposing);
         }
     }
 }

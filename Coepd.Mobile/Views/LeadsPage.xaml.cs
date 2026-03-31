@@ -71,7 +71,7 @@ public partial class LeadsPage : ContentPage
         {
             if (!_viewModel.IsLoading)
             {
-                await Task.Delay(150);
+                await Task.Delay(450);
                 continue;
             }
 
@@ -80,6 +80,8 @@ public partial class LeadsPage : ContentPage
                 await frame.TranslateTo(12, 0, 450, Easing.SinInOut);
                 await frame.TranslateTo(0, 0, 450, Easing.SinInOut);
             }
+
+            await Task.Delay(120);
         }
     }
 }
